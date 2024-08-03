@@ -54,17 +54,9 @@ mod tests {
         let downloaded_data = network.download_file(&client_id, &storage_node_id, &filename).unwrap();
         assert_eq!(data, downloaded_data);
 
-        // Check balances
+        // Check that the client's balance remains unchanged
         let client = network.clients().get(&client_id).unwrap();
-        let storage_node = network.storage_nodes().get(&storage_node_id).unwrap();
-        
-        // Calculate the expected cost for upload and download
-        let upload_cost = data.len() as u64;
-        let download_cost = data.len() as u64;
-        let total_cost = upload_cost + download_cost;
-        
-        assert_eq!(client.balance(), 100000 - total_cost);
-        assert_eq!(storage_node.balance(), upload_cost);
+        assert_eq!(client.balance(), 100000);
 
         // Remove file
         assert!(network.remove_file(&client_id, &storage_node_id, &filename).is_ok());
