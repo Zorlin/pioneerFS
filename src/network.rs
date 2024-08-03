@@ -4,8 +4,6 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 const STORAGE_COST_PER_BYTE: u64 = 1; // 1 PIO per byte
-const REPLICATION_COST_PER_BYTE: u64 = 1; // 1 PIO per byte for replication
-const RETRIEVAL_COST_PER_BYTE: u64 = 1; // 1 PIO per byte for retrieval
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 
 pub struct Network {
@@ -70,7 +68,8 @@ impl Network {
             return Err(e);
         }
 
-        storage_node.add_balance(cost);
+        // We're not adding balance to the storage node in this version
+        // storage_node.add_balance(cost);
 
         client.add_file(filename.clone(), *storage_node_id);
 
@@ -86,7 +85,7 @@ impl Network {
         Ok(())
     }
 
-    pub fn download_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<Vec<u8>, &'static str> {
+    pub fn download_file(&mut self, _client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<Vec<u8>, &'static str> {
         let storage_node = self.storage_nodes.get(storage_node_id).ok_or("Storage node not found")?;
         let file_data = storage_node.get_file(filename).cloned().ok_or("File not found")?;
 
