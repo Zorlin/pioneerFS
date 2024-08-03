@@ -39,7 +39,7 @@ impl App {
     fn new(debug_level: DebugLevel, network: Arc<Mutex<Network>>) -> App {
         network.lock().unwrap().set_debug_level(debug_level);
         let (tx, _rx) = broadcast::channel(100);
-        let mut app = App {
+        let app = App {
             input: String::new(),
             input_mode: InputMode::Normal,
             network,
@@ -49,7 +49,7 @@ impl App {
         };
 
         let sender = tx.clone();
-        app.network.lock().unwrap().message_sender = Some(sender);
+        app.network.lock().unwrap().message_sender = Some(sender.clone());
         app.network.lock().unwrap().message_sender = Some(sender);
         app
     }
