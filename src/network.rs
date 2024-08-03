@@ -3,8 +3,8 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
-    swarm::{Swarm, SwarmEvent, NetworkBehaviour},
-    kad::{self, store::MemoryStore},
+    swarm::{Swarm, SwarmEvent, SwarmBuilder},
+    kad::{self, store::MemoryStore, KademliaEvent},
     PeerId, Transport,
 };
 use std::error::Error;
@@ -188,14 +188,14 @@ impl Network {
 
         let transport = MemoryTransport::default()
             .upgrade(upgrade::Version::V1)
-            .authenticate(noise::Config::new(&local_key).expect("Failed to create noise config").into_authenticated())
+            .authenticate(noise::Config::new(&local_key).expect("Failed to create noise config"))
             .multiplex(yamux::Config::default())
             .boxed();
 
         let store = MemoryStore::new(local_peer_id.clone());
         let kademlia = kad::Behaviour::new(local_peer_id.clone(), store);
         let behaviour = NetworkBehaviourImpl { kademlia };
-        let swarm = Swarm::new(transport, behaviour, local_peer_id, libp2p::swarm::SwarmBuilder::default());
+        let swarm = SwarmBuilder::new(transport, behaviour, local_peer_id).build();
 
         let network = Network {
             message_sender: None,
@@ -220,7 +220,7 @@ impl Network {
                     println!("Listening on {:?}", address);
                 }
                 SwarmEvent::Behaviour(event) => match event {
-                    kad::KademliaEvent::OutboundQueryCompleted { result, .. } => {
+                    KademliaEvent::OutboundQueryCompleted { result, .. } => {
                         println!("Query completed: {:?}", result);
                     }
                     _ => println!("Unhandled Kademlia event: {:?}", event),
