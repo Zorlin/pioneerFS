@@ -16,11 +16,7 @@ pub enum DebugLevel {
     High,
 }
 
-impl DebugLevel {
-    pub fn is_enabled(&self) -> bool {
-        matches!(self, DebugLevel::Low | DebugLevel::High)
-    }
-
+impl Network {
     pub fn request_higher_replication(&mut self, client_id: &PeerId, filename: &str, new_replication_factor: usize) -> Result<(), String> {
         self.debug_log(&format!("Requesting higher replication for file: {} from client: {} to factor: {}", filename, client_id, new_replication_factor));
 
