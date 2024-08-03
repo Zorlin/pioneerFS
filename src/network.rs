@@ -3,7 +3,8 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
-    swarm::{Swarm, Event},
+    swarm::{Swarm},
+    swarm::SwarmEvent,
     SwarmBuilder,
     kad::{self, store::MemoryStore, Event},
     PeerId, Transport,
@@ -217,10 +218,10 @@ impl Network {
     pub async fn run(&mut self) -> Result<(), Box<dyn Error>> {
         while let Some(event) = self.swarm.next().await {
             match event {
-                swarm::Event::NewListenAddr { address, .. } => {
+                SwarmEvent::NewListenAddr { address, .. } => {
                     println!("Listening on {:?}", address);
                 }
-                swarm::Event::Behaviour(event) => match event {
+                SwarmEvent::Behaviour(event) => match event {
                     kad::Event::OutboundQueryCompleted { result, .. } => {
                         println!("Query completed: {:?}", result);
                     }
