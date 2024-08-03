@@ -31,10 +31,7 @@ pub async fn start_webui(network: Arc<Mutex<Network>>) {
             // and updates the network state.
             // Assuming `run_advanced_network_tests` is a function that runs the tests
             // and updates the network state.
-            if let Err(e) = crate::run_advanced_network_tests(&network) {
-                eprintln!("Failed to run advanced network tests: {:?}", e);
-                return warp::reply::html("Failed to start advanced network tests");
-            }
+            crate::run_advanced_network_tests(&network);
             warp::reply::html("Advanced network tests started")
         })
     };
