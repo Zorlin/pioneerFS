@@ -104,20 +104,18 @@ fn run_app<B: ratatui::backend::Backend>(
                             return Ok(());
                         }
                         KeyCode::Up => {
-                            if app.scroll_offset > 0 {
-                                app.scroll_offset -= 1;
-                            }
+                            app.scroll_offset = app.scroll_offset.saturating_sub(1);
                         }
                         KeyCode::Down => {
-                            if app.scroll_offset < app.messages.len().saturating_sub(1) {
-                                app.scroll_offset += 1;
-                            }
+                            let max_scroll = app.messages.len().saturating_sub(1);
+                            app.scroll_offset = (app.scroll_offset + 1).min(max_scroll);
                         }
                         KeyCode::PageUp => {
                             app.scroll_offset = app.scroll_offset.saturating_sub(10);
                         }
                         KeyCode::PageDown => {
-                            app.scroll_offset = (app.scroll_offset + 10).min(app.messages.len().saturating_sub(1));
+                            let max_scroll = app.messages.len().saturating_sub(1);
+                            app.scroll_offset = (app.scroll_offset + 10).min(max_scroll);
                         }
                         _ => {}
                     },
@@ -207,24 +205,26 @@ fn ui(f: &mut Frame, app: &mut App) {
     }
 
     let messages_height = chunks[2].height as usize - 2; // Subtract 2 for the border
-    let start_index = app.scroll_offset.min(app.messages.len().saturating_sub(messages_height));
-    let end_index = (start_index + messages_height).min(app.messages.len());
+    let messages_len = app.messages.len();
+    let max_scroll = messages_len.saturating_sub(messages_height);
+    let start_index = app.scroll_offset.min(max_scroll);
+    let end_index = (start_index + messages_height).min(messages_len);
     
     let messages: Vec<ListItem> = app.messages[start_index..end_index]
         .iter()
         .enumerate()
         .map(|(i, m)| {
-            let content = vec![Line::from(Span::raw(format!("{}: {}", start_index + i, m)))];
+            let content = vec![Line::from(Span::raw(format!("{}: {}", start_index + i + 1, m)))];
             ListItem::new(content)
         })
         .collect();
     
     let messages = List::new(messages)
-        .block(Block::default().borders(Borders::ALL).title(format!("Messages ({}/{})", start_index + 1, app.messages.len())))
+        .block(Block::default().borders(Borders::ALL).title(format!("Messages ({}-{}/{})", start_index + 1, end_index, messages_len)))
         .highlight_style(Style::default().add_modifier(Modifier::BOLD))
         .highlight_symbol("> ");
     
-    f.render_widget(messages, chunks[2]);
+    f.render_stateful_widget(messages, chunks[2], &mut app.messages_state);
 }
 
 fn execute_command(app: &mut App) {
