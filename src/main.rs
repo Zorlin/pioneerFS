@@ -115,7 +115,7 @@ fn run_app<B: ratatui::backend::Backend>(
     }
 }
 
-fn ui(f: &mut Frame, app: &App) {
+fn ui<B: ratatui::backend::Backend>(f: &mut Frame<B>, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(2)
@@ -158,7 +158,7 @@ fn ui(f: &mut Frame, app: &App) {
         ),
     };
     let text = ratatui::text::Text::from(msg).patch_style(style);
-    let help_message = Paragraph::new(text.clone());
+    let help_message = Paragraph::new(text);
     f.render_widget(help_message, chunks[0]);
 
     let input = Paragraph::new(app.input.as_str())
