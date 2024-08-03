@@ -18,6 +18,7 @@ pub enum DebugLevel {
 impl DebugLevel {
     pub fn is_enabled(&self) -> bool {
         matches!(self, DebugLevel::Low | DebugLevel::High)
+    }
 }
 
 impl Network {
