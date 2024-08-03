@@ -30,7 +30,7 @@ mod tests {
         network.add_storage_node(peer_id, 10); // Add a default price of 10
         assert_eq!(network.storage_nodes().len(), initial_count + 1);
         assert!(network.storage_nodes().contains_key(&peer_id));
-        Ok(());
+        Ok(())
     }
 
     #[test]
@@ -55,7 +55,7 @@ mod tests {
             let storage_node_id = PeerId::random();
             network.add_storage_node(storage_node_id, 10); // Add a default price of 10
         }
-        Ok(());
+        Ok(())
 
         let filename = "test.txt".to_string();
         let data = b"Hello, world!".to_vec();
@@ -96,7 +96,7 @@ mod tests {
             let storage_node_id = PeerId::random();
             network.add_storage_node(storage_node_id, 10); // Add a default price of 10
         }
-        Ok(());
+        Ok(())
 
         let filename = "replicated.txt".to_string();
         let data = b"Replicate me!".to_vec();

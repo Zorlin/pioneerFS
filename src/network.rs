@@ -197,7 +197,7 @@ impl Network {
         let kademlia = kad::Behaviour::new(local_peer_id.clone(), store);
         let behaviour = NetworkBehaviourImpl { kademlia };
         let swarm = SwarmBuilder::with_existing_identity(local_key)
-            .transport(transport)
+            .with_transport(transport)
             .behaviour(behaviour)
             .executor(Box::new(|fut| {
                 tokio::spawn(fut);
