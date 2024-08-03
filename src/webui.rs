@@ -1,4 +1,5 @@
-use warp::{Filter, Reply};
+use warp::Filter;
+use crate::run_advanced_network_tests;
 use pioneerfs::network::Network;
 use serde_json::json;
 use std::sync::{Arc, Mutex};
@@ -24,7 +25,7 @@ pub async fn start_webui(network: Arc<Mutex<Network>>) {
         let network = network.lock().unwrap();
         // Assuming `run_advanced_network_tests` is a function that runs the tests
         // and updates the network state.
-        run_advanced_network_tests(&network);
+        crate::run_advanced_network_tests(&network);
         warp::reply::html("Advanced network tests started")
     });
 
