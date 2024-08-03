@@ -126,7 +126,8 @@ impl Bid {
         Self {
             storage_node_id,
             price_per_gb,
-        }
+        };
+        status
     }
 }
 
