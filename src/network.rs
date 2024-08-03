@@ -1,9 +1,9 @@
 use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
 use libp2p::{
-    core::transport::MemoryTransport,
+    core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
-    swarm::{Swarm, SwarmEvent},
+    swarm::{Swarm, SwarmEvent, NetworkBehaviour},
     PeerId, Transport,
 };
 use std::error::Error;
@@ -122,7 +122,7 @@ pub struct Network {
     pub token: ERC20,
     pub bids: HashMap<String, Vec<Bid>>,
     pub debug_level: DebugLevel,
-    pub swarm: Swarm<Kademlia<MemoryStore>>,
+    pub swarm: Swarm<DummyBehaviour>,
 }
 
 pub struct Bid {
@@ -186,11 +186,12 @@ impl Network {
 
         let transport = MemoryTransport::default()
             .upgrade(upgrade::Version::V1)
-            .authenticate(noise::NoiseConfig::xx(&local_key).into_authenticated())
-            .multiplex(yamux::Config::default())
+            .authenticate(noise::NoiseAuthenticated::xx(&local_key).into_authenticated())
+            .multiplex(yamux::YamuxConfig::default())
             .boxed();
 
-        let swarm = Swarm::new(transport, local_peer_id);
+        let behaviour = DummyBehaviour {};
+        let swarm = Swarm::new(transport, behaviour, local_peer_id);
 
         let network = Network {
             message_sender: None,
@@ -474,3 +475,5 @@ impl Network {
         Ok(())
     }
 }
+#[derive(NetworkBehaviour)]
+struct DummyBehaviour {}
