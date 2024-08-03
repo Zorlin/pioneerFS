@@ -3,7 +3,7 @@ mod storage_node;
 mod client;
 mod erc20;
 
-pub use network::Network;
+pub use network::{Network, DebugLevel};
 pub use storage_node::StorageNode;
 pub use client::Client;
 
