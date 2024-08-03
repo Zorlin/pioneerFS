@@ -1,6 +1,6 @@
 use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
-use libp2p::{PeerId, kad::{Kademlia, store::MemoryStore}};
+use libp2p::PeerId;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
@@ -17,13 +17,6 @@ pub enum DebugLevel {
 }
 
 impl DebugLevel {
-    pub fn is_enabled(&self) -> bool {
-        match self {
-            DebugLevel::None => false,
-            DebugLevel::Low | DebugLevel::High => true,
-        }
-    }
-
     pub fn is_enabled(&self) -> bool {
         match self {
             DebugLevel::None => false,
@@ -123,7 +116,7 @@ pub struct Network {
     pub token: ERC20,
     pub bids: HashMap<String, Vec<Bid>>,
     pub debug_level: DebugLevel,
-    pub kademlia: Option<Kademlia<MemoryStore>>,
+    // pub kademlia: Option<Kademlia<MemoryStore>>,
 }
 
 pub struct Bid {
