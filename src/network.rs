@@ -14,13 +14,9 @@ pub enum DebugLevel {
     None,
     Low,
     High,
-    pub message_sender: Option<Sender<String>>,
 
-impl DebugLevel {
-    pub fn is_enabled(&self) -> bool {
-        matches!(self, DebugLevel::Low | DebugLevel::High)
-    }
-}
+impl Network {
+    pub message_sender: Option<Sender<String>>,
 
 impl Network {
     pub fn request_higher_replication(&mut self, client_id: &PeerId, filename: &str, new_replication_factor: usize) -> Result<(), String> {
@@ -29,8 +25,7 @@ impl Network {
         let current_storage_nodes = {
             let client = self.clients.get(client_id).ok_or_else(|| "Client not found".to_string())?;
             client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?.clone()
-            message_sender: None,
-        }
+        };
 
 
         if new_replication_factor <= current_storage_nodes.len() {
