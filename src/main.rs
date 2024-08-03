@@ -69,7 +69,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // Run in normal mode
         let network = Arc::new(Mutex::new(Network::new()));
 
-        let (tx, _rx) = broadcast::channel(100);
+        let (tx, rx) = broadcast::channel(100);
 
         let webui_handle = {
             let network_clone = Arc::clone(&network);
