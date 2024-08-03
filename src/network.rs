@@ -6,7 +6,7 @@ use libp2p::{
     noise::{Config as NoiseConfig, Keypair, X25519Spec as X25519},
     yamux::Config as YamuxConfig,
     swarm::{Swarm, SwarmEvent},
-    kad::{store::MemoryStore, Kademlia, KademliaConfig, KademliaEvent},
+    kad::{store::MemoryStore, Config, Event},
     PeerId,
     swarm::SwarmBuilder,
 };
