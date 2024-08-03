@@ -2,7 +2,7 @@ use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
 use libp2p::{
     identity,
-    kad::{store::MemoryStore, Kademlia, KademliaConfig, KademliaEvent},
+    kad::store::MemoryStore,
     tcp::TcpConfig,
     noise::{NoiseConfig, X25519Spec, Keypair, AuthenticKeypair},
     yamux::YamuxConfig,
@@ -192,7 +192,7 @@ impl Network {
         let transport = TcpConfig::new()
             .nodelay(true)
             .upgrade(upgrade::Version::V1)
-            .authenticate(NoiseConfig::xx(Keypair::<X25519Spec>::new().into_authentic(&local_key)?).unwrap())
+            .authenticate(NoiseConfig::xx(Keypair::<X25519>::new().into_authentic(&local_key)?).unwrap())
             .multiplex(YamuxConfig::default())
             .boxed();
 
