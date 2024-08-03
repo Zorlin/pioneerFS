@@ -138,7 +138,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 }
-}
 
 fn adjust_pricing(_network: &mut Network) {
 }
