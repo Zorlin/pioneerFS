@@ -8,7 +8,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, List, ListItem, Paragraph, ListState},
     Frame, Terminal,
 };
 use std::{env, error::Error, io, time::{Duration, Instant}};
@@ -25,6 +25,7 @@ struct App {
     input_mode: InputMode,
     network: Network,
     messages: Vec<String>,
+    messages_state: ListState,
 }
 
 impl App {
@@ -36,6 +37,7 @@ impl App {
             input_mode: InputMode::Normal,
             network,
             messages: Vec::new(),
+            messages_state: ListState::default(),
         }
     }
 }
@@ -98,6 +100,24 @@ fn run_app<B: ratatui::backend::Backend>(
                         }
                         KeyCode::Char('q') => {
                             return Ok(());
+                        }
+                        KeyCode::Up => {
+                            if let Some(selected) = app.messages_state.selected() {
+                                if selected > 0 {
+                                    app.messages_state.select(Some(selected - 1));
+                                }
+                            } else {
+                                app.messages_state.select(Some(0));
+                            }
+                        }
+                        KeyCode::Down => {
+                            if let Some(selected) = app.messages_state.selected() {
+                                if selected < app.messages.len().saturating_sub(1) {
+                                    app.messages_state.select(Some(selected + 1));
+                                }
+                            } else {
+                                app.messages_state.select(Some(0));
+                            }
                         }
                         _ => {}
                     },
@@ -191,13 +211,15 @@ fn ui(f: &mut Frame, app: &App) {
         .iter()
         .enumerate()
         .map(|(i, m)| {
-            let content = vec![Line::from(format!("{}: {}", i, m))];
+            let content = vec![Line::from(Span::raw(format!("{}: {}", i, m)))];
             ListItem::new(content)
         })
         .collect();
-    let messages =
-        List::new(messages).block(Block::default().borders(Borders::ALL).title("Messages"));
-    f.render_widget(messages, chunks[2]);
+    let messages = List::new(messages)
+        .block(Block::default().borders(Borders::ALL).title("Messages"))
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+        .highlight_symbol("> ");
+    f.render_stateful_widget(messages, chunks[2], &mut app.messages_state);
 }
 
 fn execute_command(app: &mut App) {
