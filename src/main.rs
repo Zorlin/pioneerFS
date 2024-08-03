@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         run_replication_tests(&mut network);
     } else {
         // Run in normal mode
-        let mut network = Network::new();
+        let network = Network::new();
         let network_arc = Arc::new(Mutex::new(network));
 
         let webui_handle = {
