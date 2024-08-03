@@ -17,16 +17,17 @@ mod tests {
     #[test]
     fn test_network_creation() {
         let network = Network::new();
-        assert!(network.storage_nodes().is_empty());
+        assert!(!network.storage_nodes().is_empty(), "Network should initialize with default storage nodes");
         assert!(network.clients().is_empty());
     }
 
     #[test]
     fn test_add_storage_node() {
         let mut network = Network::new();
+        let initial_count = network.storage_nodes().len();
         let peer_id = PeerId::random();
         network.add_storage_node(peer_id, 10); // Add a default price of 10
-        assert_eq!(network.storage_nodes().len(), 1);
+        assert_eq!(network.storage_nodes().len(), initial_count + 1);
         assert!(network.storage_nodes().contains_key(&peer_id));
     }
 
