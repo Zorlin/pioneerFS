@@ -80,7 +80,7 @@ mod advanced_network_tests {
         assert_eq!(updated_storage_nodes.len(), 2, "Updated replication factor should be 2");
 
         // Verify file content on both storage nodes
-        for &node_id in updated_storage_nodes {
+        for node_id in updated_storage_nodes {
             let file_content = network.get_file_content(&node_id, filename).expect("Failed to get file content");
             assert_eq!(file_content, initial_data, "File content mismatch after replication");
         }
