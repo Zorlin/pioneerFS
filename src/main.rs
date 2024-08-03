@@ -129,36 +129,28 @@ fn ui(f: &mut Frame, app: &App) {
         )
         .split(f.size());
 
-    let (msg, style) = match app.input_mode {
-        InputMode::Normal => (
-            vec![
-                Line::from(vec![
-                    Span::raw("Press "),
-                    Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
-                    Span::raw(" to exit, "),
-                    Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
-                    Span::raw(" to start editing."),
-                ]),
-                Line::from("Type 'help' for available commands."),
-            ],
-            Style::default().add_modifier(Modifier::RAPID_BLINK),
-        ),
-        InputMode::Editing => (
-            vec![
-                Line::from(vec![
-                    Span::raw("Press "),
-                    Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
-                    Span::raw(" to stop editing, "),
-                    Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
-                    Span::raw(" to execute command"),
-                ]),
-                Line::from("Type 'help' for available commands."),
-            ],
-            Style::default(),
-        ),
+    let help_message = match app.input_mode {
+        InputMode::Normal => Paragraph::new(vec![
+            Line::from(vec![
+                Span::raw("Press "),
+                Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to exit, "),
+                Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to start editing."),
+            ]),
+            Line::from("Type 'help' for available commands."),
+        ]).style(Style::default().add_modifier(Modifier::RAPID_BLINK)),
+        InputMode::Editing => Paragraph::new(vec![
+            Line::from(vec![
+                Span::raw("Press "),
+                Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to stop editing, "),
+                Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to execute command"),
+            ]),
+            Line::from("Type 'help' for available commands."),
+        ]),
     };
-    let text = ratatui::text::Text::from(msg).patch_style(style);
-    let help_message = Paragraph::new(text);
     f.render_widget(help_message, chunks[0]);
 
     let input = Paragraph::new(app.input.as_str())
