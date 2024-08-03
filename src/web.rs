@@ -27,7 +27,14 @@ pub async fn start_web_server(network: Arc<Mutex<Network>>) {
         .and(network_filter.clone())
         .and_then(handle_upload);
 
-    let routes = upload_route.with(warp::cors().allow_any_origin());
+    let status_route = warp::path("status")
+        .and(warp::get())
+        .and(network_filter.clone())
+        .and_then(handle_status);
+
+    let routes = upload_route
+        .or(status_route)
+        .with(warp::cors().allow_any_origin());
 
     warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
 }
@@ -55,4 +62,11 @@ async fn handle_upload(
             replication_map: vec![],
         })),
     }
+}
+async fn handle_status(
+    network: Arc<Mutex<Network>>,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let network = network.lock().unwrap();
+    let status = network.get_network_status();
+    Ok(warp::reply::json(&status))
 }

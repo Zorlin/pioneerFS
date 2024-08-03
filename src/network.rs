@@ -84,12 +84,12 @@ impl Network {
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NetworkStatus {
-    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
-    pub storage_nodes: HashMap<PeerId, StorageNodeStatus>,
-    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
-    pub clients: HashMap<PeerId, ClientStatus>,
-    pub deals: Vec<Deal>,
-    pub marketplace: VecDeque<StorageOffer>,
+    #[serde_as(as = "Vec<DisplayFromStr>")]
+    pub storage_nodes: Vec<PeerId>,
+    #[serde_as(as = "Vec<DisplayFromStr>")]
+    pub clients: Vec<PeerId>,
+    pub deals: usize,
+    pub marketplace: usize,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -191,15 +191,10 @@ impl Network {
 
     pub fn get_network_status(&self) -> NetworkStatus {
         NetworkStatus {
-            storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, StorageNodeStatus {
-                available_space: node.available_space(),
-                stored_files: node.stored_files().keys().cloned().collect(),
-            })).collect(),
-            clients: self.clients.iter().map(|(id, client)| (*id, ClientStatus {
-                files: client.list_files().clone(),
-            })).collect(),
-            deals: self.deals.clone(),
-            marketplace: self.marketplace.clone(),
+            storage_nodes: self.storage_nodes.keys().cloned().collect(),
+            clients: self.clients.keys().cloned().collect(),
+            deals: self.deals.len(),
+            marketplace: self.marketplace.len(),
         }
     }
 
