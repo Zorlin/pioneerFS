@@ -136,10 +136,6 @@ fn run_app<B: ratatui::backend::Backend>(
     tick_rate: Duration,
     mut rx: broadcast::Receiver<String>,
 ) -> io::Result<()> {
-    terminal: &mut Terminal<B>,
-    mut app: App,
-    tick_rate: Duration,
-) -> io::Result<()> {
     let mut last_tick = Instant::now();
     loop {
         terminal.draw(|f| ui(f, &mut app))?;
