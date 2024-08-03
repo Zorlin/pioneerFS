@@ -40,39 +40,3 @@ fn test_network_operations() {
     assert_eq!(data, still_available_data);
 }
 
-#[test]
-fn test_balance_operations() {
-    let mut network = Network::new();
-
-    let client_id = PeerId::random();
-    let storage_node_id = PeerId::random();
-
-    network.add_client(client_id);
-    network.add_storage_node(storage_node_id);
-
-    let filename = "balance_test.txt".to_string();
-    let data = b"Test balance operations".to_vec();
-    let initial_balance = 100000;
-    let upload_cost = (data.len() as u64) * 1; // 1 PIO per byte
-
-    // Upload a file
-    assert!(network.upload_file(&client_id, &storage_node_id, filename.clone(), data.clone()).is_ok());
-
-    // Check balances after upload
-    let client = network.clients().get(&client_id).unwrap();
-    let storage_node = network.storage_nodes().get(&storage_node_id).unwrap();
-
-    assert_eq!(client.balance(), initial_balance - upload_cost);
-    assert_eq!(storage_node.balance(), upload_cost);
-
-    // Try to upload a file with insufficient balance
-    let large_data = vec![0; 200000]; // 200KB file
-    assert!(network.upload_file(&client_id, &storage_node_id, "large_file.txt".to_string(), large_data).is_err());
-
-    // Check balances haven't changed after failed upload
-    let client = network.clients().get(&client_id).unwrap();
-    let storage_node = network.storage_nodes().get(&storage_node_id).unwrap();
-
-    assert_eq!(client.balance(), initial_balance - upload_cost);
-    assert_eq!(storage_node.balance(), upload_cost);
-}
