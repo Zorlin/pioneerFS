@@ -3,8 +3,8 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     identity,
     kad::{store::MemoryStore, Kademlia, KademliaConfig, KademliaEvent},
-    tcp::TcpTransport,
-    noise::{NoiseConfig, X25519, Keypair, NoiseKeypair, AuthenticKeypair},
+    tcp::TcpConfig,
+    noise::{NoiseConfig, X25519Spec, Keypair},
     yamux::YamuxConfig,
     swarm::{Swarm, SwarmEvent},
     core::upgrade,
@@ -192,13 +192,13 @@ impl Network {
         let transport = TcpConfig::new()
             .nodelay(true)
             .upgrade(upgrade::Version::V1)
-            .authenticate(NoiseConfig::xx(NoiseKeypair::<X25519>::new().into_authentic(&local_key)?).unwrap())
+            .authenticate(NoiseConfig::xx(Keypair::<X25519Spec>::new().into_authentic(&local_key)?).unwrap())
             .multiplex(YamuxConfig::default())
             .boxed();
 
         let store = MemoryStore::new(local_peer_id);
         let kademlia = Kademlia::with_config(local_peer_id, store, KademliaConfig::default());
-        let swarm = SwarmBuilder::with_new_identity(transport, kademlia, local_peer_id).build();
+        let swarm = SwarmBuilder::with_new_identity().build();
 
         let mut network = Network {
             message_sender: None,
