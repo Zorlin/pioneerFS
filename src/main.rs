@@ -468,15 +468,6 @@ fn execute_command(app: &mut App) {
 }
 }
 
-fn display_abstract_network(network: &Network) {
-    let status = network.get_network_status();
-    println!("Network Abstract State:");
-    println!("  Clients: {}", status.clients.len());
-    println!("  Storage Nodes: {}", status.storage_nodes.len());
-    println!("  Active Deals: {}", status.deals);
-    println!("  Marketplace Offers: {}", status.marketplace);
-    println!("----------------------------");
-}
 fn run_advanced_network_tests(network: &mut Network, tx: broadcast::Sender<String>) {
     let mut rng = rand::thread_rng();
     
