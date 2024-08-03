@@ -23,13 +23,11 @@ pub struct NetworkStatus {
 pub struct StorageNodeStatus {
     pub available_space: usize,
     pub stored_files: Vec<String>,
-    pub balance: u64,
 }
 
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ClientStatus {
-    pub balance: u64,
     #[serde_as(as = "HashMap<_, Vec<DisplayFromStr>>")]
     pub files: HashMap<String, Vec<PeerId>>,
 }
@@ -97,10 +95,8 @@ impl Network {
             storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, StorageNodeStatus {
                 available_space: node.available_space(),
                 stored_files: node.stored_files().keys().cloned().collect(),
-                balance: node.balance(),
             })).collect(),
             clients: self.clients.iter().map(|(id, client)| (*id, ClientStatus {
-                balance: client.balance(),
                 files: client.list_files().clone(),
             })).collect(),
             deals: self.deals.clone(),
@@ -258,7 +254,6 @@ impl Network {
 
     pub fn accept_storage_offer(&mut self, client_id: &PeerId, offer_index: usize, file_size: usize) -> Result<(), &'static str> {
         let offer = self.marketplace.get(offer_index).cloned().ok_or("Offer not found")?;
-        let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
         let storage_node = self.storage_nodes.get_mut(&offer.storage_node_id).ok_or("Storage node not found")?;
 
         if file_size > offer.available_space {
@@ -266,11 +261,10 @@ impl Network {
         }
 
         let price = (file_size as u64 * offer.price_per_gb) / (1024 * 1024 * 1024); // Convert to GB
-        if !client.subtract_balance(price) {
+        if !self.token.transfer(client_id, &offer.storage_node_id, price) {
             return Err("Client doesn't have enough balance");
         }
 
-        storage_node.add_balance(price);
         storage_node.reserve_space(file_size)?;
 
         // Remove the offer and add a new one with updated available space
