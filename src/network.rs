@@ -16,6 +16,15 @@ pub enum DebugLevel {
     High,
 }
 
+impl DebugLevel {
+    pub fn is_enabled(&self) -> bool {
+        match self {
+            DebugLevel::None => false,
+            DebugLevel::Low | DebugLevel::High => true,
+        }
+    }
+}
+
 
 impl Network {
     pub fn request_higher_replication(&mut self, client_id: &PeerId, filename: &str, new_replication_factor: usize) -> Result<(), String> {
@@ -165,6 +174,7 @@ impl Deal {
 impl Network {
     pub fn new() -> Self {
         let mut network = Network {
+            message_sender: None,
             storage_nodes: HashMap::new(),
             clients: HashMap::new(),
             deals: Vec::new(),

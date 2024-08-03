@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use libp2p::PeerId;
-use serde::{Serialize, Deserialize};
 use tokio::sync::broadcast::Sender;
 
 #[derive(Clone)]
