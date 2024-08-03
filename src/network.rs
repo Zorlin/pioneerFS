@@ -3,10 +3,11 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     identity,
     tcp::Config as TcpConfig,
-    noise::{Config as NoiseConfig, AuthenticKeypair, x25519::X25519},
+    noise::{Config as NoiseConfig, Keypair, X25519},
     yamux::Config as YamuxConfig,
     swarm::{Swarm, SwarmEvent},
-    kad::{store::MemoryStore, Kademlia, KademliaEvent},
+    kad::{store::MemoryStore},
+    libp2p_kad::{Kademlia, KademliaEvent},
     PeerId,
     SwarmBuilder,
 };
@@ -191,13 +192,13 @@ impl Network {
 
         let transport = TcpConfig::new()
             .nodelay(true)
-            .upgrade(libp2p::core::upgrade::Version::V1)
-            .authenticate(NoiseConfig::new(AuthenticKeypair::new(local_key)).unwrap().into_authenticated())
+            .upgrade(upgrade::Version::V1)
+            .authenticate(NoiseConfig::xx(local_key).into_authenticated())
             .multiplex(YamuxConfig::default())
             .boxed();
 
         let store = MemoryStore::new(local_peer_id);
-        let kademlia = libp2p::kad::Kademlia::new(local_peer_id, store);
+        let kademlia = Kademlia::new(local_peer_id, store);
         let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id).build();
 
         let mut network = Network {
@@ -226,7 +227,7 @@ impl Network {
                 Some(SwarmEvent::NewListenAddr { address, .. }) => {
                     println!("Listening on {:?}", address);
                 }
-                Some(SwarmEvent::Behaviour(libp2p::kad::KademliaEvent::OutboundQueryCompleted { result, .. })) => {
+                Some(SwarmEvent::Behaviour(KademliaEvent::OutboundQueryCompleted { result, .. })) => {
                     println!("Query completed: {:?}", result);
                 }
                 _ => {}
