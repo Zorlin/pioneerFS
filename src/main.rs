@@ -51,7 +51,6 @@ impl App {
         let sender = tx.clone();
         app.network.lock().unwrap().message_sender = Some(sender.clone());
         app.network.lock().unwrap().message_sender = Some(sender);
-        // Adjust pricing based on usage
         adjust_pricing(&mut network.lock().unwrap());
         app
     }
@@ -202,7 +201,6 @@ fn run_app<B: ratatui::backend::Backend>(
             last_tick = Instant::now();
         }
     }
-}
 
 fn ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
