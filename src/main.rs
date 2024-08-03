@@ -42,7 +42,7 @@ impl App {
         let app = App {
             input: String::new(),
             input_mode: InputMode::Normal,
-            network,
+            network: network.clone(),
             messages: Vec::new(),
             messages_state: ListState::default(),
             scroll_offset: 0,
@@ -54,6 +54,7 @@ impl App {
         adjust_pricing(&mut network.lock().unwrap());
         app
     }
+    Ok(())
 }
 
 #[tokio::main]
@@ -466,14 +467,6 @@ fn execute_command(app: &mut App) {
 
     app.input.clear();
 }
-    for sp in network.storage_nodes.values_mut() {
-        let usage_ratio = sp.used_space() as f64 / sp.total_space() as f64;
-        if usage_ratio > 0.8 {
-            sp.set_price_per_gb(sp.price_per_gb() + 1); // Increase price if usage is above 80%
-        } else if usage_ratio < 0.2 {
-            sp.set_price_per_gb(sp.price_per_gb().saturating_sub(1)); // Decrease price if usage is below 20%
-        }
-    }
 }
 
 fn display_abstract_network(network: &Network) {
