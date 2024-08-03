@@ -7,6 +7,7 @@ const MAX_STORAGE: usize = 1_000_000_000; // 1GB max storage
 #[derive(Clone, Serialize, Deserialize)]
 
 pub struct StorageNode {
+    #[serde_as(as = "DisplayFromStr")]
     peer_id: PeerId,
     balance: u64,
     stored_files: HashMap<String, Vec<u8>>,
