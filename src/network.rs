@@ -4,7 +4,7 @@ use libp2p::{
     identity,
     kad::{store::MemoryStore, Kademlia, KademliaConfig, KademliaEvent},
     tcp::TcpConfig,
-    noise::{NoiseConfig, X25519Spec, Keypair, NoiseKeypair},
+    noise::{NoiseConfig, X25519Spec, Keypair},
     yamux::YamuxConfig,
     swarm::{Swarm, SwarmEvent},
     core::upgrade,
