@@ -159,6 +159,14 @@ impl Network {
         }
     }
 
+    pub fn get_file_locations(&self, client_id: &PeerId, filename: &str) -> Option<&Vec<PeerId>> {
+        self.clients.get(client_id)?.get_file_locations(filename)
+    }
+
+    pub fn get_file_content(&self, node_id: &PeerId, filename: &str) -> Option<Vec<u8>> {
+        self.storage_nodes.get(node_id)?.get_file(filename).cloned()
+    }
+
     pub fn set_debug_level(&mut self, level: DebugLevel) {
         self.debug_level = level;
     }

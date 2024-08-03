@@ -69,19 +69,19 @@ mod advanced_network_tests {
         network.upload_file(&client_id, filename.to_string(), initial_data.clone(), 1).unwrap();
 
         // Check initial replication
-        let initial_storage_nodes = network.get_file_locations(&client_id, filename).unwrap();
+        let initial_storage_nodes = network.get_file_locations(&client_id, filename).expect("Failed to get initial file locations");
         assert_eq!(initial_storage_nodes.len(), 1, "Initial replication factor should be 1");
 
         // Request higher replication factor
         network.request_higher_replication(&client_id, filename, 2).unwrap();
 
         // Check updated replication
-        let updated_storage_nodes = network.get_file_locations(&client_id, filename).unwrap();
+        let updated_storage_nodes = network.get_file_locations(&client_id, filename).expect("Failed to get updated file locations");
         assert_eq!(updated_storage_nodes.len(), 2, "Updated replication factor should be 2");
 
         // Verify file content on both storage nodes
-        for &node_id in &updated_storage_nodes {
-            let file_content = network.get_file_content(&node_id, filename).unwrap();
+        for &node_id in updated_storage_nodes {
+            let file_content = network.get_file_content(&node_id, filename).expect("Failed to get file content");
             assert_eq!(file_content, initial_data, "File content mismatch after replication");
         }
     }
