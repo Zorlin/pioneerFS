@@ -59,6 +59,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         run_replication_tests(&mut network);
     } else {
         // Run in normal mode
+        println!("WebUI is available at http://localhost:3030");
         let webui_handle = task::spawn(async {
             webui::start_webui().await;
         });
