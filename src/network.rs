@@ -14,7 +14,6 @@ pub enum DebugLevel {
     None,
     Low,
     High,
-    pub kademlia: Kademlia<MemoryStore>,
 
 impl DebugLevel {
     pub fn is_enabled(&self) -> bool {
