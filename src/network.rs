@@ -2,11 +2,9 @@ use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
 use libp2p::{
     identity,
-    kad::{store::MemoryStore, Kademlia, KademliaEvent},
-    swarm::{Swarm, SwarmEvent, SwarmBuilder},
-    tcp::GenTcpConfig,
-    noise::NoiseConfig,
-    yamux::YamuxConfig,
+    kad::{store::MemoryStore},
+    swarm::{Swarm, SwarmEvent},
+    SwarmBuilder,
     core::upgrade,
     PeerId,
 };
