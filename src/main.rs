@@ -122,6 +122,40 @@ fn display_abstract_network(network: &Network) {
     println!("----------------------------");
 }
 
+fn run_replication_tests(network: &mut Network) {
+    let mut rng = rand::thread_rng();
+    
+    for i in 0..100 {
+        let client_id = PeerId::random();
+        network.add_client(client_id);
+        
+        let sp_id = PeerId::random();
+        network.add_storage_node(sp_id, rng.gen_range(10..20));
+        
+        let filename = format!("test_file_{}.txt", i);
+        let data = vec![0u8; rng.gen_range(1000..10000)];
+        let replication_factor = rng.gen_range(2..5);
+        
+        match network.upload_file(&client_id, filename.clone(), data, replication_factor) {
+            Ok(_) => println!("Test {}: File uploaded successfully", i),
+            Err(e) => println!("Test {}: Upload failed - {}", i, e),
+        }
+        
+        // Display abstract network state
+        display_abstract_network(network);
+    }
+}
+
+fn display_abstract_network(network: &Network) {
+    let status = network.get_network_status();
+    println!("Network Abstract State:");
+    println!("  Clients: {}", status.clients.len());
+    println!("  Storage Nodes: {}", status.storage_nodes.len());
+    println!("  Active Deals: {}", status.deals.len());
+    println!("  Marketplace Offers: {}", status.marketplace.len());
+    println!("----------------------------");
+}
+
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     mut app: App,
