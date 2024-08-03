@@ -13,6 +13,7 @@ pub struct Network {
 }
 
 #[derive(Clone)]
+#[derive(Clone)]
 pub struct StorageOffer {
     storage_node_id: PeerId,
     price_per_gb: u64,
