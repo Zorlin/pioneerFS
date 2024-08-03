@@ -14,7 +14,6 @@ use ratatui::{
 use std::{env, error::Error, io, time::{Duration, Instant}};
 use pioneerfs::{Network, DebugLevel};
 use tokio::task;
-use warp::Filter;
 
 mod webui;
 use libp2p::PeerId;
@@ -64,7 +63,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             webui::start_webui().await;
         });
 
-        let terminal_handle = task::spawn_blocking(|| -> Result<(), Box<dyn Error>> {
+        let terminal_handle = task::spawn_blocking(|| -> Result<(), Box<dyn Error + Send + Sync>> {
             enable_raw_mode()?;
             let mut stdout = io::stdout();
             execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
