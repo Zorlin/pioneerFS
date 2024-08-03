@@ -1,12 +1,16 @@
 use libp2p::PeerId;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
+use serde_with::{serde_as, DisplayFromStr};
 
+#[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 
 pub struct Client {
+    #[serde_as(as = "DisplayFromStr")]
     peer_id: PeerId,
     balance: u64,
+    #[serde_as(as = "HashMap<_, Vec<DisplayFromStr>>")]
     files: HashMap<String, Vec<PeerId>>,
 }
 
