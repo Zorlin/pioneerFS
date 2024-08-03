@@ -57,7 +57,7 @@ mod tests {
         assert_eq!(data, downloaded_data);
 
         // Check that the client's balance is deducted
-        let client_balance = network.token.balance_of(&client_id);
+        let client_balance = network.get_balance(&client_id);
         assert!(client_balance < 100000);
 
         // Remove file

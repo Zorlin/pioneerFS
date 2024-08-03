@@ -37,7 +37,7 @@ pub struct Network {
     clients: HashMap<PeerId, Client>,
     deals: Vec<Deal>,
     marketplace: VecDeque<StorageOffer>,
-    token: ERC20,
+    pub token: ERC20,
 }
 
 #[serde_as]
@@ -126,6 +126,10 @@ impl Network {
 
     pub fn clients(&self) -> &HashMap<PeerId, Client> {
         &self.clients
+    }
+
+    pub fn get_balance(&self, peer_id: &PeerId) -> u64 {
+        self.token.balance_of(peer_id)
     }
 
     pub fn upload_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), &'static str> {
