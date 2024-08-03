@@ -18,7 +18,7 @@ use std::sync::{Arc, Mutex};
 use tokio::task;
 
 mod webui;
-use libp2p::PeerId;
+use libp2p::{PeerId, swarm::SwarmEvent};
 use rand::Rng;
 
 enum InputMode {

@@ -3,8 +3,7 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
-    swarm::{Swarm},
-    swarm::SwarmEvent,
+    swarm::{Swarm, SwarmBuilder, SwarmEvent},
     SwarmBuilder,
     kad::{self, store::MemoryStore, Event},
     PeerId, Transport,
@@ -218,7 +217,25 @@ impl Network {
     pub async fn run(&mut self) -> Result<(), Box<dyn Error>> {
         while let Some(event) = self.swarm.next().await {
             match event {
-                SwarmEvent::NewListenAddr { address, .. } => {
+                SwarmEvent::ConnectionEstablished { peer_id, .. } => {
+                    println!("Connection established with {:?}", peer_id);
+                }
+                SwarmEvent::ConnectionClosed { peer_id, cause, .. } => {
+                    if let Some(err) = cause {
+                        println!("Connection closed with {:?} due to {:?}", peer_id, err);
+                    } else {
+                        println!("Connection closed with {:?}", peer_id);
+                    }
+                }
+                SwarmEvent::IncomingConnection { local_addr, send_back_addr } => {
+                    println!("Incoming connection from {:?} to {:?}", send_back_addr, local_addr);
+                }
+                SwarmEvent::Behaviour(event) => match event {
+                    kad::Event::OutboundQueryCompleted { result, .. } => {
+                        println!("Query completed: {:?}", result);
+                    }
+                    _ => println!("Unhandled Kademlia event: {:?}", event),
+                }
                     println!("Listening on {:?}", address);
                 }
                 SwarmEvent::Behaviour(event) => match event {
