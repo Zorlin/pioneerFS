@@ -106,7 +106,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             })
         };
 
-        let _: Result<(), Box<dyn Error + Send + Sync>> = tokio::try_join!(webui_handle, terminal_handle, async move {
+        let _: Result<(), Box<dyn Error + Send + Sync>> = tokio::try_join!(webui_handle, terminal_handle, async {
             loop {
                 // Periodically update the network status in the WebUI
                 {
@@ -471,7 +471,7 @@ fn display_abstract_network(network: &Network) {
     println!("  Marketplace Offers: {}", status.marketplace.len());
     println!("----------------------------");
 }
-fn run_advanced_network_tests(network: &Network) {
+fn run_advanced_network_tests(_network: &Network) {
     // Implement the logic to run the advanced network tests
     // and update the network state.
     // This is a placeholder implementation.
