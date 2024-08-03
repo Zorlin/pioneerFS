@@ -188,51 +188,6 @@ impl Network {
         }
     }
 
-    pub fn get_file_locations(&self, client_id: &PeerId, filename: &str) -> Option<&Vec<PeerId>> {
-        self.clients.get(client_id)?.get_file_locations(filename)
-    }
-
-    pub fn get_file_content(&self, node_id: &PeerId, filename: &str) -> Option<Vec<u8>> {
-        self.storage_nodes.get(node_id)?.get_file(filename).cloned()
-    }
-
-    pub fn set_debug_level(&mut self, level: DebugLevel) {
-        self.debug_level = level;
-    }
-
-    fn debug_log(&self, message: &str) {
-        if self.debug_level.is_enabled() {
-            println!("[DEBUG] {}", message);
-        }
-    }
-
-    pub fn add_bid(&mut self, filename: String, storage_node_id: PeerId, price_per_gb: u64) {
-        let bid = Bid {
-            storage_node_id,
-            price_per_gb,
-        };
-        self.bids.entry(filename).or_insert_with(Vec::new).push(bid);
-    }
-
-    pub fn get_bids(&self, filename: &str) -> Option<&Vec<Bid>> {
-        self.bids.get(filename)
-    }
-
-
-    pub fn get_network_status(&self) -> NetworkStatus {
-        NetworkStatus {
-            storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, StorageNodeStatus {
-                available_space: node.available_space(),
-                stored_files: node.stored_files().keys().cloned().collect(),
-            })).collect(),
-            clients: self.clients.iter().map(|(id, client)| (*id, ClientStatus {
-                files: client.list_files().clone(),
-            })).collect(),
-            deals: self.deals.clone(),
-            marketplace: self.marketplace.clone(),
-        }
-    }
-
     pub fn add_storage_node(&mut self, peer_id: PeerId, price_per_gb: u64) {
         self.storage_nodes.insert(peer_id, StorageNode::new(peer_id, price_per_gb));
     }
