@@ -76,6 +76,7 @@ The project uses built-in Rust implementations to simulate smart contract functi
 - `src/storage_node.rs`: Defines the `StorageNode` struct and its methods.
 - `src/network.rs`: Implements the `Network` struct, managing interactions between clients and storage nodes.
 - `src/lib.rs`: Main library file that ties everything together.
+- `tests/examples/`: Contains example files demonstrating various functionalities.
 
 ## Features
 
@@ -83,6 +84,25 @@ The project uses built-in Rust implementations to simulate smart contract functi
 - Store and retrieve files in the network
 - Manage client and storage node balances
 - Simulate network operations
+- Terminal User Interface (TUI) for easy interaction
+
+## Running Examples
+
+The project includes example files to demonstrate various functionalities. To run an example:
+
+1. Navigate to the project root directory.
+2. Run the following command:
+   ```
+   cargo run --example <example_name>
+   ```
+   Replace `<example_name>` with the name of the example file (without the .rs extension).
+
+For instance, to run the canvas example:
+```
+cargo run --example canvas
+```
+
+This will demonstrate a graphical interface using the Ratatui library, showcasing different drawing capabilities.
 
 ## Troubleshooting
 
