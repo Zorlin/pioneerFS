@@ -54,6 +54,8 @@ impl App {
         adjust_pricing(&mut network.lock().unwrap());
         app
     }
+    Ok(())
+}
 }
 
 #[tokio::main]
