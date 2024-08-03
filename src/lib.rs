@@ -18,7 +18,7 @@ mod tests {
     fn test_network_creation() {
         let network = Network::new();
         assert!(!network.storage_nodes().is_empty(), "Network should initialize with default storage nodes");
-        assert!(network.clients().is_empty());
+        assert!(!network.clients().is_empty(), "Network should initialize with default clients");
     }
 
     #[test]
@@ -34,9 +34,10 @@ mod tests {
     #[test]
     fn test_add_client() {
         let mut network = Network::new();
+        let initial_count = network.clients().len();
         let peer_id = PeerId::random();
         network.add_client(peer_id);
-        assert_eq!(network.clients().len(), 1);
+        assert_eq!(network.clients().len(), initial_count + 1);
         assert!(network.clients().contains_key(&peer_id));
     }
 
