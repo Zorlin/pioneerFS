@@ -325,6 +325,16 @@ impl Network {
         Err("File not found on any storage node".to_string())
     }
 
+    pub fn get_file_locations(&self, client_id: &PeerId, filename: &str) -> Result<Vec<PeerId>, String> {
+        let client = self.clients.get(client_id).ok_or_else(|| "Client not found".to_string())?;
+        client.get_file_locations(filename).cloned().ok_or_else(|| "File not found".to_string())
+    }
+
+    pub fn get_file_content(&self, node_id: &PeerId, filename: &str) -> Result<Vec<u8>, String> {
+        let storage_node = self.storage_nodes.get(node_id).ok_or_else(|| "Storage node not found".to_string())?;
+        storage_node.get_file(filename).cloned().ok_or_else(|| "File not found on storage node".to_string())
+    }
+
     pub fn renew_deal(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<(), &'static str> {
         let deal = self.deals.iter_mut()
             .find(|d| d.client_id == *client_id && d.storage_node_id == *storage_node_id && d.filename == filename)
