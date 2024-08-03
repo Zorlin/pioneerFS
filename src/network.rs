@@ -13,7 +13,8 @@ const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 pub enum DebugLevel {
     None,
     Low,
-    High
+    High,
+}
 
 impl DebugLevel {
     pub fn is_enabled(&self) -> bool {
@@ -131,7 +132,6 @@ pub struct Network {
     pub token: ERC20,
     pub bids: HashMap<String, Vec<Bid>>,
     pub debug_level: DebugLevel,
-    pub kademlia: Kademlia<MemoryStore>,
     pub kademlia: Kademlia<MemoryStore>,
 }
 
