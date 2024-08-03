@@ -228,20 +228,6 @@ impl Network {
                 _ => {}
             }
         }
-        Ok(())
-            match event {
-                SwarmEvent::NewListenAddr { address, .. } => {
-                    println!("Listening on {:?}", address);
-                }
-                SwarmEvent::Behaviour(NetworkBehaviourEvent::Kademlia(event)) => match event {
-                    KademliaEvent::OutboundQueryCompleted { result, .. } => {
-                        println!("Query completed: {:?}", result);
-                    }
-                    _ => println!("Unhandled Kademlia event: {:?}", event),
-                },
-                _ => {}
-            }
-        }
     }
 
     pub fn get_network_status(&self) -> NetworkStatus {
