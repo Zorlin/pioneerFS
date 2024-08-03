@@ -131,6 +131,10 @@ const INDEX_HTML: &str = r#"
             .force("center", d3.forceCenter(width / 2, height / 2));
 
         d3.json("/status").then(data => {
+            if (!data || !data.clients || !data.storage_nodes) {
+                console.error("Invalid data received from /status endpoint", data);
+                return;
+            }
             const graph = {
                 nodes: data.clients.map(id => ({ id, group: "client" }))
                     .concat(data.storage_nodes.map(id => ({ id, group: "storage_node" }))),
