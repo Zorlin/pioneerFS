@@ -8,7 +8,6 @@ use rand::seq::SliceRandom;
 
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 const REPLICATION_FACTOR: usize = 3; // Default replication factor for the TESTNET
-pub const CHUNK_SIZE: usize = 1024 * 1024; // 1MB chunk size for erasure coding
 
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
@@ -176,33 +175,18 @@ impl Network {
     }
 
     pub fn upload_file(&mut self, client_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), String> {
-        // Calculate the cost of storage (1 token per chunk)
-        let total_chunks = (data.len() + CHUNK_SIZE - 1) / CHUNK_SIZE;
-        let storage_cost = total_chunks as u64;
-
-        // Check if the client has enough balance
-        if self.get_balance(client_id) < storage_cost {
-            return Err("Insufficient balance for file upload".to_string());
-        }
-
         // Select storage nodes
         let available_nodes: Vec<PeerId> = self.storage_nodes.keys().cloned().collect();
         if available_nodes.len() < REPLICATION_FACTOR {
             return Err("Not enough storage nodes available".to_string());
         }
 
-        // Deduct tokens from the client
-        self.token.transfer(client_id, &PeerId::random(), storage_cost);
-
         let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), REPLICATION_FACTOR).cloned().collect();
 
-        // Erasure code the file
-        let encoded_chunks = self.erasure_code_file(&data);
-
         // Calculate total cost
-        let total_size_gb = (encoded_chunks.iter().map(|chunk| chunk.len()).sum::<usize>() as f64 / (1024.0 * 1024.0 * 1024.0)).ceil() as u64;
+        let file_size_gb = (data.len() as f64 / (1024.0 * 1024.0 * 1024.0)).ceil() as u64;
         let total_cost: u64 = selected_nodes.iter()
-            .map(|node_id| total_size_gb * self.storage_nodes.get(node_id).unwrap().price_per_gb())
+            .map(|node_id| file_size_gb * self.storage_nodes.get(node_id).unwrap().price_per_gb())
             .sum();
 
         // Check if the client has enough balance
@@ -211,26 +195,24 @@ impl Network {
             return Err(format!("Insufficient balance to upload file. Required: {}, Available: {}", total_cost, client_balance));
         }
 
-        // Store chunks and create deals
+        // Store file and create deals
         let mut stored_nodes = Vec::new();
-        for (i, chunk) in encoded_chunks.iter().enumerate() {
-            let node_id = &selected_nodes[i % selected_nodes.len()];
+        for node_id in &selected_nodes {
             let storage_node = self.storage_nodes.get_mut(node_id).unwrap();
-            let chunk_filename = format!("{}_chunk_{}", filename, i);
             
-            if let Err(e) = storage_node.store_file(chunk_filename.clone(), chunk.clone()) {
-                return Err(format!("Failed to store chunk on node {}: {}", node_id, e));
+            if let Err(e) = storage_node.store_file(filename.clone(), data.clone()) {
+                return Err(format!("Failed to store file on node {}: {}", node_id, e));
             }
 
-            let chunk_cost = (chunk.len() as f64 / (1024.0 * 1024.0 * 1024.0)).ceil() as u64 * storage_node.price_per_gb();
-            if !self.token.transfer(client_id, node_id, chunk_cost) {
+            let node_cost = file_size_gb * storage_node.price_per_gb();
+            if !self.token.transfer(client_id, node_id, node_cost) {
                 return Err("Failed to transfer tokens".to_string());
             }
 
             self.deals.push(Deal::new(
                 *client_id,
                 *node_id,
-                chunk_filename,
+                filename.clone(),
                 DEAL_DURATION,
             ));
 
@@ -240,11 +222,6 @@ impl Network {
         // Update client's file record
         let client = self.clients.get_mut(client_id).ok_or_else(|| "Client not found".to_string())?;
         client.add_file(filename.clone(), stored_nodes);
-
-        // Initiate replication process if needed
-        if total_chunks > REPLICATION_FACTOR {
-            self.replicate_file(client_id, &filename, total_chunks - REPLICATION_FACTOR)?;
-        }
 
         Ok(())
     }
@@ -276,32 +253,15 @@ impl Network {
         let client = self.clients.get(client_id).ok_or_else(|| "Client not found".to_string())?;
         let storage_nodes = client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?;
 
-        let mut chunks = Vec::new();
-        let mut i = 0;
-        while let Some(chunk) = self.get_chunk(filename, i, &storage_nodes) {
-            chunks.push(chunk);
-            i += 1;
-        }
-
-        if chunks.is_empty() {
-            return Err("No chunks found for the file".to_string());
-        }
-
-        // For our simple erasure coding, we just need to take every other chunk
-        let original_data: Vec<u8> = chunks.into_iter().step_by(2).flatten().collect();
-        Ok(original_data)
-    }
-
-    fn get_chunk(&self, filename: &str, chunk_index: usize, storage_nodes: &[PeerId]) -> Option<Vec<u8>> {
         for node_id in storage_nodes {
             if let Some(storage_node) = self.storage_nodes.get(node_id) {
-                let chunk_filename = format!("{}_chunk_{}", filename, chunk_index);
-                if let Some(chunk) = storage_node.get_file(&chunk_filename) {
-                    return Some(chunk.clone());
+                if let Some(file_data) = storage_node.get_file(filename) {
+                    return Ok(file_data.clone());
                 }
             }
         }
-        None
+
+        Err("File not found on any storage node".to_string())
     }
 
     pub fn renew_deal(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<(), &'static str> {
