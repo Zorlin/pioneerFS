@@ -1,9 +1,11 @@
 use libp2p::PeerId;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
+use serde_with::{serde_as, DisplayFromStr};
 
 const MAX_STORAGE: usize = 1_000_000_000; // 1GB max storage
 
+#[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 
 pub struct StorageNode {
