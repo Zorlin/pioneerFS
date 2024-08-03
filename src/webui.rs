@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 
 pub async fn start_webui(network: Arc<Mutex<Network>>, tx: broadcast::Sender<String>) {
     let network_status = {
-        let network = Arc::clone(&network);
+        let mut network = Arc::clone(&network);
         warp::path("status").map(move || {
             let network = network.lock().unwrap();
             let status = json!({
