@@ -229,19 +229,6 @@ impl Network {
             }
         }
         Ok(())
-            match event {
-                SwarmEvent::NewListenAddr { address, .. } => {
-                    println!("Listening on {:?}", address);
-                }
-                SwarmEvent::Behaviour(event) => match event {
-                    kad::KademliaEvent::OutboundQueryCompleted { result, .. } => {
-                        println!("Query completed: {:?}", result);
-                    }
-                    _ => println!("Unhandled Kademlia event: {:?}", event),
-                }
-                _ => {}
-            }
-        }
     }
 
     pub fn get_network_status(&self) -> NetworkStatus {
@@ -497,7 +484,7 @@ impl Network {
         Ok(())
     }
 }
-#[derive(NetworkBehaviour)]
+#[derive(libp2p::swarm::NetworkBehaviour)]
 struct NetworkBehaviourImpl {
     kademlia: kad::Behaviour<kad::store::MemoryStore>,
 }
