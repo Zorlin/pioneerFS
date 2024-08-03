@@ -2,7 +2,7 @@ use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
 use libp2p::{
     identity,
-    kad::{store::MemoryStore, Kademlia, Config as KademliaConfig, Event as KademliaEvent},
+    kad::{store::MemoryStore, Kademlia, KademliaConfig, KademliaEvent},
     swarm::{Swarm, SwarmEvent},
     PeerId,
 };
@@ -196,7 +196,7 @@ impl Network {
             .boxed();
 
         let store = MemoryStore::new(local_peer_id);
-        let kademlia = Kademlia::new(local_peer_id, store);
+        let kademlia = Kademlia::new(local_peer_id, store, KademliaConfig::default());
         let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id)
             .build();
 
@@ -226,7 +226,7 @@ impl Network {
                 Some(SwarmEvent::NewListenAddr { address, .. }) => {
                     println!("Listening on {:?}", address);
                 }
-                Some(SwarmEvent::Behaviour(KademliaEvent::OutboundQueryCompleted { result, .. })) => {
+                Some(SwarmEvent::Behaviour(KademliaEvent::OutboundQueryProgressed { result, .. })) => {
                     println!("Query completed: {:?}", result);
                 }
                 _ => {}
