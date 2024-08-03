@@ -1,5 +1,4 @@
 use crate::{StorageNode, Client, erc20::ERC20};
-use libp2p::futures::StreamExt;
 use tokio::sync::broadcast::Sender;
 use libp2p::{futures::StreamExt,
     core::{transport::MemoryTransport, upgrade},
@@ -197,7 +196,7 @@ impl Network {
         let store = MemoryStore::new(local_peer_id.clone());
         let kademlia = kad::Behaviour::new(local_peer_id.clone(), store);
         let behaviour = NetworkBehaviourImpl { kademlia };
-        let swarm = SwarmBuilder::with_new_identity().build();
+        let swarm = SwarmBuilder::new(transport, behaviour, local_peer_id).build();
 
         let network = Network {
             message_sender: None,
@@ -231,18 +230,10 @@ impl Network {
                 SwarmEvent::IncomingConnection { local_addr, send_back_addr, connection_id } => {
                     println!("Incoming connection from {:?} to {:?}", send_back_addr, local_addr);
                 }
-                SwarmEvent::Behaviour(event) => match event {
-                    kad::Event::OutboundQueryProgressed { result, .. } => {
-                        println!("Query completed: {:?}", result);
-                    }
-                    _ => println!("Unhandled Kademlia event: {:?}", event),
+                SwarmEvent::Behaviour(kad::Event::OutboundQueryProgressed { result, .. }) => {
+                    println!("Query completed: {:?}", result);
                 }
-                SwarmEvent::Behaviour(event) => match event {
-                    kad::Event::OutboundQueryProgressed { result, .. } => {
-                        println!("Query completed: {:?}", result);
-                    }
-                    _ => println!("Unhandled Kademlia event: {:?}", event),
-                }
+                _ => println!("Unhandled Kademlia event: {:?}", event),
                 _ => {}
             }
         }
