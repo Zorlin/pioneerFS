@@ -37,7 +37,7 @@ struct App {
 
 impl App {
     fn new(debug_level: DebugLevel) -> App {
-        let network = Network::new();
+        let mut network = Network::new();
         network.set_debug_level(debug_level);
         App {
             input: String::new(),
@@ -67,12 +67,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         let (tx, _rx) = broadcast::channel(100);
 
+        let network_clone = Arc::clone(&network_arc);
+        let tx_clone = tx.clone();
         let webui_handle = {
             task::spawn(async move {
-                webui::start_webui(network_clone, tx_clone).await;
+                webui::start_webui(Arc::clone(&network_arc), tx.clone()).await;
             })
         };
 
+        let network_clone = Arc::clone(&network_arc);
+        let tx_clone = tx.clone();
         let terminal_handle = {
             let network_clone = Arc::clone(&network_arc);
             let tx_clone = tx.clone();
