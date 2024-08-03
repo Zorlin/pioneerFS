@@ -1,12 +1,12 @@
 use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
-use libp2p_core::{Transport, upgrade, transport::MemoryTransport};
-use libp2p_noise as noise;
-use libp2p_identity as identity;
-use libp2p_yamux as yamux;
-use libp2p_swarm::{Swarm, SwarmEvent, SwarmBuilder};
-use libp2p_kad::{store::MemoryStore, Kademlia, KademliaEvent};
-use libp2p::PeerId;
+use libp2p::{
+    core::{transport::MemoryTransport, upgrade},
+    noise, identity, yamux,
+    swarm::{Swarm, SwarmEvent, SwarmBuilder},
+    kad::{store::MemoryStore, Kademlia, KademliaEvent},
+    PeerId, Transport,
+};
 use std::error::Error;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
@@ -185,21 +185,21 @@ impl Network {
         let local_peer_id = PeerId::from(local_key.public());
         println!("Local peer id: {:?}", local_peer_id);
 
-        let transport = TcpConfig::new()
-            .nodelay(true)
-let id_keys = identity::Keypair::generate_ed25519();
-let noise = noise::Config::new(&id_keys).unwrap();
-let transport = MemoryTransport::default()
-    .upgrade(upgrade::Version::V1)
-    .authenticate(noise)
-    .multiplex(yamux::Config::default())
-    .boxed();
+        let noise_keys = noise::Keypair::<noise::X25519Spec>::new()
+            .into_authentic(&local_key)
+            .expect("Signing libp2p-noise static DH keypair failed.");
+
+        let transport = MemoryTransport::default()
+            .upgrade(upgrade::Version::V1)
+            .authenticate(noise::NoiseConfig::xx(noise_keys).into_authenticated())
+            .multiplex(yamux::YamuxConfig::default())
+            .boxed();
 
         let store = MemoryStore::new(local_peer_id);
         let kademlia = Kademlia::new(local_peer_id, store);
-        let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id).build();
+        let swarm = SwarmBuilder::with_tokio_executor(transport, kademlia, local_peer_id).build();
 
-        let mut network = Network {
+        let network = Network {
             message_sender: None,
             storage_nodes: HashMap::new(),
             clients: HashMap::new(),
@@ -210,11 +210,6 @@ let transport = MemoryTransport::default()
             debug_level: DebugLevel::None,
             swarm,
         };
-
-        // Initialize with at least one storage node and one client
-        let initial_client_id = PeerId::random();
-        let initial_storage_node_id = PeerId::random();
-        network.add_storage_node(initial_storage_node_id, 10); // Example price per GB
 
         Ok(network)
     }
