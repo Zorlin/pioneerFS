@@ -16,6 +16,18 @@ mod advanced_network_tests {
     }
 
     #[test]
+    fn test_kademlia_put_get() {
+        let mut network = setup();
+        let key = b"test_key".to_vec();
+        let value = b"test_value".to_vec();
+
+        network.put_value(key.clone(), value.clone());
+        let retrieved_value = network.get_value(key).expect("Value should be present in the DHT");
+
+        assert_eq!(retrieved_value, value, "Retrieved value should match the stored value");
+    }
+
+    #[test]
     fn test_file_replication() {
         println!("Starting test_file_replication");
         println!("Starting test_storage_node_failure");

@@ -1,6 +1,6 @@
 use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
-use libp2p::PeerId;
+use libp2p::{PeerId, kad::{Kademlia, KademliaConfig, store::MemoryStore, record::store::MemoryStore}};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
@@ -14,7 +14,7 @@ pub enum DebugLevel {
     None,
     Low,
     High,
-}
+    pub kademlia: Kademlia<MemoryStore>,
 
 impl DebugLevel {
     pub fn is_enabled(&self) -> bool {
@@ -22,6 +22,22 @@ impl DebugLevel {
             DebugLevel::None => false,
             DebugLevel::Low | DebugLevel::High => true,
         }
+    }
+
+    pub fn put_value(&mut self, key: Vec<u8>, value: Vec<u8>) {
+        self.kademlia.put_record(libp2p::kad::record::Record {
+            key: libp2p::kad::record::Key::new(&key),
+            value,
+            publisher: None,
+            expires: None,
+        }, libp2p::kad::Quorum::One);
+    }
+
+    pub fn get_value(&mut self, key: Vec<u8>) -> Option<Vec<u8>> {
+        if let Ok(record) = self.kademlia.get_record(&libp2p::kad::record::Key::new(&key), libp2p::kad::Quorum::One) {
+            return Some(record.records.first()?.value.clone());
+        }
+        None
     }
 }
 
@@ -187,7 +203,11 @@ impl Network {
         // Initialize with at least one storage node and one client
         let initial_client_id = PeerId::random();
         let initial_storage_node_id = PeerId::random();
-        network.add_client(initial_client_id);
+        let local_peer_id = PeerId::random();
+        let store = MemoryStore::new(local_peer_id.clone());
+        let kademlia = Kademlia::with_config(local_peer_id.clone(), store, KademliaConfig::default());
+
+        network.kademlia = kademlia;
         network.add_storage_node(initial_storage_node_id, 10); // Example price per GB
 
         network
