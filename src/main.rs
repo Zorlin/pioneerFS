@@ -58,6 +58,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // Run in test mode
         let mut network = Network::new();
         network.set_debug_level(DebugLevel::Low);
+        let (tx, _rx) = broadcast::channel(100);
         run_replication_tests(&mut network, tx.clone());
     } else {
         // Run in normal mode

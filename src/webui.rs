@@ -33,7 +33,7 @@ pub async fn start_webui(network: Arc<Mutex<Network>>, tx: broadcast::Sender<Str
             // and updates the network state.
             // Assuming `run_advanced_network_tests` is a function that runs the tests
             // and updates the network state.
-            crate::run_advanced_network_tests(&network);
+            crate::run_advanced_network_tests(&network, tx.clone());
             warp::reply::html("Advanced network tests started")
         })
     };
