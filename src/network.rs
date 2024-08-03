@@ -3,7 +3,6 @@ use libp2p::PeerId;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-const STORAGE_COST_PER_BYTE: u64 = 1; // 1 PIO per byte
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 
 pub struct Network {

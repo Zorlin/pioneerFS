@@ -6,8 +6,10 @@
 ## Dependencies
 The project should use the following libaries, tools, techniques and protocols
 
-* Peerbit
 * HTTP/3
+* Rust
+* Ratatui
+* rust-libp2p
 
 ## The network
 The network will consist initially of a permissionless and unenforced consensus network based on the PoSS algorithm. This will be implemented in the pioneerFS program.
