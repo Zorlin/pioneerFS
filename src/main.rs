@@ -106,7 +106,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             })
         };
 
-        let _: Result<(), Box<dyn Error + Send + Sync>> = tokio::try_join!(webui_handle, terminal_handle, async {
+        let _: Result<(), Box<dyn Error + Send + Sync>> = tokio::try_join!(webui_handle, terminal_handle, async move {
             loop {
                 // Periodically update the network status in the WebUI
                 {
