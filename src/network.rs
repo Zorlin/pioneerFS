@@ -44,7 +44,7 @@ impl Network {
 
         if available_nodes.len() < additional_replications {
             return Err(format!("Not enough additional storage nodes available. Required: {}, Available: {}", additional_replications, available_nodes.len()));
-        }
+        };
 
 
         let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), additional_replications).cloned().collect();
@@ -57,7 +57,7 @@ impl Network {
                 .get_file(filename)
                 .ok_or_else(|| "File not found on storage node".to_string())?
                 .clone()
-        }
+        };
 
         // Replicate the file to the new nodes
         for &node_id in &selected_nodes {
