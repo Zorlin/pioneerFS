@@ -1,6 +1,5 @@
 use warp::{Filter, ws::Message, ws::WebSocket};
-use futures::{FutureExt, StreamExt};
-use std::sync::{Arc, Mutex};
+use futures::{FutureExt, StreamExt, SinkExt};
 use tokio::sync::broadcast;
 use pioneerfs::network::Network;
 use serde_json::json;

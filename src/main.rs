@@ -1,3 +1,4 @@
+use tokio::sync::broadcast;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -440,7 +441,7 @@ fn execute_command(app: &mut App) {
 
     app.input.clear();
 }
-fn run_replication_tests(network: &mut Network) {
+fn run_replication_tests(network: &mut Network, tx: broadcast::Sender<String>) {
     let mut rng = rand::thread_rng();
     
     for i in 0..100 {
