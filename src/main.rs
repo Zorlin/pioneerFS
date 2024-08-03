@@ -97,7 +97,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let tick_rate = Duration::from_millis(250);
                 let mut app = App::new(debug_level, network_clone);
                 app.messages.push("WebUI is available at http://localhost:3030".to_string());
-                let res = run_app(&mut terminal, app, tick_rate);
+                let res = run_app(&mut terminal, app, tick_rate, rx);
 
                 disable_raw_mode()?;
                 execute!(
@@ -134,9 +134,13 @@ fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     mut app: App,
     tick_rate: Duration,
+    mut rx: broadcast::Receiver<String>,
+) -> io::Result<()> {
+    terminal: &mut Terminal<B>,
+    mut app: App,
+    tick_rate: Duration,
 ) -> io::Result<()> {
     let mut last_tick = Instant::now();
-    let mut rx = rx;
     loop {
         terminal.draw(|f| ui(f, &mut app))?;
 
