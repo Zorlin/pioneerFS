@@ -1,6 +1,7 @@
 mod network;
 mod storage_node;
 mod client;
+mod erc20;
 
 pub use network::Network;
 pub use storage_node::StorageNode;
@@ -55,9 +56,9 @@ mod tests {
         let downloaded_data = network.download_file(&client_id, &storage_node_id, &filename).unwrap();
         assert_eq!(data, downloaded_data);
 
-        // Check that the client's balance remains unchanged
-        let client = network.clients().get(&client_id).unwrap();
-        assert_eq!(client.balance(), 100000);
+        // Check that the client's balance is deducted
+        let client_balance = network.token.balance_of(&client_id);
+        assert!(client_balance < 100000);
 
         // Remove file
         assert!(network.remove_file(&client_id, &storage_node_id, &filename).is_ok());
