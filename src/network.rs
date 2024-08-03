@@ -4,7 +4,7 @@ use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
     swarm::{Swarm, SwarmEvent, NetworkBehaviour},
-    kad,
+    kad::{self, store::MemoryStore},
     PeerId, Transport,
 };
 use std::error::Error;
@@ -188,14 +188,14 @@ impl Network {
 
         let transport = MemoryTransport::default()
             .upgrade(upgrade::Version::V1)
-            .authenticate(noise::NoiseAuthenticated::xx(&local_key).into_authenticated())
+            .authenticate(noise::NoiseConfig::xx(local_key).into_authenticated())
             .multiplex(yamux::YamuxConfig::default())
             .boxed();
 
-        let store = MemoryStore::new(local_peer_id);
-        let kademlia = Kademlia::new(local_peer_id, store);
+        let store = MemoryStore::new(local_peer_id.clone());
+        let kademlia = kad::Kademlia::new(local_peer_id.clone(), store);
         let behaviour = NetworkBehaviourImpl { kademlia };
-        let swarm = Swarm::new(transport, behaviour, local_peer_id);
+        let swarm = Swarm::new(transport, behaviour, local_peer_id, libp2p::swarm::SwarmBuilder::default());
 
         let network = Network {
             message_sender: None,
@@ -219,14 +219,12 @@ impl Network {
                 Some(SwarmEvent::NewListenAddr { address, .. }) => {
                     println!("Listening on {:?}", address);
                 }
-                Some(SwarmEvent::Behaviour(NetworkBehaviourEvent::Kademlia(event))) => {
-                    match event {
-                        KademliaEvent::OutboundQueryCompleted { result, .. } => {
-                            println!("Query completed: {:?}", result);
-                        }
-                        _ => println!("Unhandled Kademlia event: {:?}", event),
+                Some(SwarmEvent::Behaviour(NetworkBehaviourEvent::Kademlia(event))) => match event {
+                    KademliaEvent::OutboundQueryCompleted { result, .. } => {
+                        println!("Query completed: {:?}", result);
                     }
-                }
+                    _ => println!("Unhandled Kademlia event: {:?}", event),
+                },
                 _ => {}
             }
         }
