@@ -7,7 +7,6 @@ use serde_with::{serde_as, DisplayFromStr};
 use rand::seq::SliceRandom;
 
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
-const REPLICATION_FACTOR: usize = 3; // Default replication factor for the TESTNET
 
 #[derive(Debug, Clone, Copy)]
 pub enum DebugLevel {

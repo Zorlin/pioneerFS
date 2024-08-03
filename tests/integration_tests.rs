@@ -21,7 +21,7 @@ fn test_network_operations() {
     // Upload a file
     let filename = "test.txt".to_string();
     let data = b"Hello, Pioneer! This is a test file for erasure coding.".to_vec();
-    assert!(network.upload_file(&client1_id, filename.clone(), data.clone()).is_ok());
+    assert!(network.upload_file(&client1_id, filename.clone(), data.clone(), 3).is_ok());
 
     // Download the file
     let downloaded_data = network.download_file(&client1_id, &filename).unwrap();
