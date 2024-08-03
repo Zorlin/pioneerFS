@@ -1,5 +1,8 @@
 use libp2p::PeerId;
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
+
+#[derive(Clone, Serialize, Deserialize)]
 
 pub struct Client {
     peer_id: PeerId,

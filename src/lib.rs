@@ -6,6 +6,9 @@ pub use network::Network;
 pub use storage_node::StorageNode;
 pub use client::Client;
 
+use serde::{Serialize, Deserialize};
+use serde_with;
+
 #[cfg(test)]
 mod tests {
     use super::*;

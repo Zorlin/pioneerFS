@@ -6,6 +6,7 @@ use serde::{Serialize, Deserialize};
 use serde_with::{serde_as, DisplayFromStr};
 
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
+const REPLICATION_FACTOR: usize = 3; // Default replication factor for the TESTNET
 
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
@@ -59,6 +60,7 @@ pub struct Deal {
     filename: String,
     #[serde(skip)]
     start_time: Instant,
+    #[serde(with = "serde_millis")]
     duration: Duration,
 }
 
@@ -75,13 +77,13 @@ impl Network {
     pub fn get_network_status(&self) -> NetworkStatus {
         NetworkStatus {
             storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, StorageNodeStatus {
-                available_space: node.available_space,
-                stored_files: node.stored_files.keys().cloned().collect(),
-                balance: node.balance,
+                available_space: node.available_space(),
+                stored_files: node.stored_files().keys().cloned().collect(),
+                balance: node.balance(),
             })).collect(),
             clients: self.clients.iter().map(|(id, client)| (*id, ClientStatus {
-                balance: client.balance,
-                files: client.files.clone(),
+                balance: client.balance(),
+                files: client.list_files().clone(),
             })).collect(),
             deals: self.deals.clone(),
             marketplace: self.marketplace.clone(),
@@ -132,7 +134,7 @@ impl Network {
         });
 
         // Chain upload to other storage nodes
-        self.chain_upload(storage_node_id, &filename, &data, replication - 1)?;
+        self.chain_upload(storage_node_id, &filename, &data, REPLICATION_FACTOR - 1)?;
 
         Ok(())
     }

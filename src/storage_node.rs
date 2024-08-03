@@ -1,7 +1,10 @@
 use libp2p::PeerId;
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 
 const MAX_STORAGE: usize = 1_000_000_000; // 1GB max storage
+
+#[derive(Clone, Serialize, Deserialize)]
 
 pub struct StorageNode {
     peer_id: PeerId,
@@ -81,6 +84,10 @@ impl StorageNode {
 
     pub fn available_space(&self) -> usize {
         self.available_space
+    }
+
+    pub fn stored_files(&self) -> &HashMap<String, Vec<u8>> {
+        &self.stored_files
     }
 
     pub fn reserve_space(&mut self, size: usize) -> Result<(), &'static str> {
