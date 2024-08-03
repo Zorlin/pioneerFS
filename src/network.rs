@@ -196,7 +196,13 @@ impl Network {
         let store = MemoryStore::new(local_peer_id.clone());
         let kademlia = kad::Behaviour::new(local_peer_id.clone(), store);
         let behaviour = NetworkBehaviourImpl { kademlia };
-        let swarm = SwarmBuilder::new(transport, behaviour, local_peer_id).build();
+        let swarm = SwarmBuilder::with_existing_identity(local_key)
+            .transport(transport)
+            .behaviour(behaviour)
+            .executor(Box::new(|fut| {
+                tokio::spawn(fut);
+            }))
+            .build();
 
         let network = Network {
             message_sender: None,
@@ -230,7 +236,7 @@ impl Network {
                 SwarmEvent::IncomingConnection { local_addr, send_back_addr, connection_id } => {
                     println!("Incoming connection from {:?} to {:?}", send_back_addr, local_addr);
                 }
-                SwarmEvent::Behaviour(kad::Event::OutboundQueryProgressed { result, .. }) => {
+                SwarmEvent::Behaviour(kad::KademliaEvent::OutboundQueryProgressed { result, .. }) => {
                     println!("Query completed: {:?}", result);
                 }
                 _ => println!("Unhandled Kademlia event: {:?}", event),
