@@ -12,7 +12,7 @@ use ratatui::{
     Frame, Terminal,
 };
 use std::{env, error::Error, io, time::{Duration, Instant}};
-use pioneerfs::{Network, DebugLevel};
+use pioneerfs::{Network, DebugLevel, run_advanced_network_tests};
 use std::sync::{Arc, Mutex};
 use tokio::task;
 
@@ -60,8 +60,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         run_replication_tests(&mut network);
     } else {
         // Run in normal mode
-        let network = Network::new();
-        let network_arc = Arc::new(Mutex::new(network));
+        let mut network = Network::new();
+        let network_arc = Arc::new(Mutex::new(network.clone()));
 
         let webui_handle = {
             let network_clone = Arc::clone(&network_arc);
@@ -106,7 +106,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
             })
         };
 
-        let _ = tokio::try_join!(webui_handle, terminal_handle)?;
+        let _ = tokio::try_join!(webui_handle, terminal_handle, async {
+            loop {
+                // Periodically update the network status in the WebUI
+                {
+                    let network = network_arc.lock().unwrap();
+                    run_advanced_network_tests(&network);
+                }
+                tokio::time::sleep(Duration::from_secs(5)).await;
+            }
+        })?;
     }
 
     Ok(())
@@ -461,4 +470,11 @@ fn display_abstract_network(network: &Network) {
     println!("  Active Deals: {}", status.deals.len());
     println!("  Marketplace Offers: {}", status.marketplace.len());
     println!("----------------------------");
+}
+fn run_advanced_network_tests(network: &Network) {
+    // Implement the logic to run the advanced network tests
+    // and update the network state.
+    // This is a placeholder implementation.
+    println!("Running advanced network tests...");
+    // Update the network state here
 }
