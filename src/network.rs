@@ -236,8 +236,6 @@ impl Network {
                     }
                     _ => println!("Unhandled Kademlia event: {:?}", event),
                 }
-                    println!("Listening on {:?}", address);
-                }
                 SwarmEvent::Behaviour(event) => match event {
                     kad::Event::OutboundQueryCompleted { result, .. } => {
                         println!("Query completed: {:?}", result);
