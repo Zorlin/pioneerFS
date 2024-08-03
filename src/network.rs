@@ -108,30 +108,6 @@ pub struct Network {
     pub debug_level: DebugLevel,
 }
 
-#[serde_as]
-#[derive(Clone, Serialize, Deserialize)]
-pub struct NetworkStatus {
-    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
-    pub storage_nodes: HashMap<PeerId, StorageNodeStatus>,
-    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
-    pub clients: HashMap<PeerId, ClientStatus>,
-    pub deals: Vec<Deal>,
-    pub marketplace: VecDeque<StorageOffer>,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct StorageNodeStatus {
-    pub available_space: usize,
-    pub stored_files: Vec<String>,
-}
-
-#[serde_as]
-#[derive(Clone, Serialize, Deserialize)]
-pub struct ClientStatus {
-    #[serde_as(as = "HashMap<_, Vec<DisplayFromStr>>")]
-    pub files: HashMap<String, Vec<PeerId>>,
-}
-
 pub struct Bid {
     pub storage_node_id: PeerId,
     pub price_per_gb: u64,
@@ -220,20 +196,6 @@ impl Network {
 
     pub fn set_debug_level(&mut self, level: DebugLevel) {
         self.debug_level = level;
-    }
-
-    pub fn get_network_status(&self) -> NetworkStatus {
-        NetworkStatus {
-            storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, StorageNodeStatus {
-                available_space: node.available_space(),
-                stored_files: node.stored_files().keys().cloned().collect(),
-            })).collect(),
-            clients: self.clients.iter().map(|(id, client)| (*id, ClientStatus {
-                files: client.list_files().clone(),
-            })).collect(),
-            deals: self.deals.clone(),
-            marketplace: self.marketplace.clone(),
-        }
     }
 
     pub fn add_storage_node(&mut self, peer_id: PeerId, price_per_gb: u64) {
