@@ -137,19 +137,6 @@ fn run_app<B: ratatui::backend::Backend>(
                 }
             }
         }
-        "increase_replication" => {
-            if parts.len() != 4 {
-                app.messages.push("Usage: increase_replication <client_id> <filename> <new_replication_factor>".to_string());
-                return;
-            }
-            let client_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
-            let filename = parts[2];
-            let new_replication_factor = parts[3].parse::<usize>().unwrap_or(0);
-            match app.network.request_higher_replication(&client_id, filename, new_replication_factor) {
-                Ok(_) => app.messages.push(format!("Successfully increased replication for file {} to factor {}", filename, new_replication_factor)),
-                Err(e) => app.messages.push(format!("Failed to increase replication: {}", e)),
-            }
-        }
         if last_tick.elapsed() >= tick_rate {
             last_tick = Instant::now();
         }
@@ -386,6 +373,19 @@ fn execute_command(app: &mut App) {
             match app.network.accept_storage_offer(&client_id, offer_index, file_size) {
                 Ok(_) => app.messages.push("Storage offer accepted successfully".to_string()),
                 Err(e) => app.messages.push(format!("Failed to accept storage offer: {}", e)),
+            }
+        }
+        "increase_replication" => {
+            if parts.len() != 4 {
+                app.messages.push("Usage: increase_replication <client_id> <filename> <new_replication_factor>".to_string());
+                return;
+            }
+            let client_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
+            let filename = parts[2];
+            let new_replication_factor = parts[3].parse::<usize>().unwrap_or(0);
+            match app.network.request_higher_replication(&client_id, filename, new_replication_factor) {
+                Ok(_) => app.messages.push(format!("Successfully increased replication for file {} to factor {}", filename, new_replication_factor)),
+                Err(e) => app.messages.push(format!("Failed to increase replication: {}", e)),
             }
         }
         _ => {
