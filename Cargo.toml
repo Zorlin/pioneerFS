@@ -13,6 +13,7 @@ doctest = true
 libp2p = { version = "0.51", features = ["tcp", "mdns", "gossipsub", "noise", "yamux", "ping"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
+serde_with = "3.4"
 futures = "0.3"
 crossterm = "0.27"
 ratatui = "0.24"

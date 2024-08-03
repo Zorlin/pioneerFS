@@ -3,12 +3,16 @@ use libp2p::PeerId;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
+use serde_with::{serde_as, DisplayFromStr};
 
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 
+#[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NetworkStatus {
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub storage_nodes: HashMap<PeerId, StorageNodeStatus>,
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub clients: HashMap<PeerId, ClientStatus>,
     pub deals: Vec<Deal>,
     pub marketplace: VecDeque<StorageOffer>,
@@ -21,9 +25,11 @@ pub struct StorageNodeStatus {
     pub balance: u64,
 }
 
+#[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ClientStatus {
     pub balance: u64,
+    #[serde_as(as = "HashMap<_, Vec<DisplayFromStr>>")]
     pub files: HashMap<String, Vec<PeerId>>,
 }
 
@@ -34,18 +40,24 @@ pub struct Network {
     marketplace: VecDeque<StorageOffer>,
 }
 
-#[derive(Clone)]
+#[serde_as]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct StorageOffer {
+    #[serde_as(as = "DisplayFromStr")]
     storage_node_id: PeerId,
     price_per_gb: u64,
     available_space: usize,
 }
 
-#[derive(Clone)]
+#[serde_as]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Deal {
+    #[serde_as(as = "DisplayFromStr")]
     client_id: PeerId,
+    #[serde_as(as = "DisplayFromStr")]
     storage_node_id: PeerId,
     filename: String,
+    #[serde(skip)]
     start_time: Instant,
     duration: Duration,
 }
@@ -62,8 +74,15 @@ impl Network {
 
     pub fn get_network_status(&self) -> NetworkStatus {
         NetworkStatus {
-            storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, node.get_status())).collect(),
-            clients: self.clients.iter().map(|(id, client)| (*id, client.get_status())).collect(),
+            storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, StorageNodeStatus {
+                available_space: node.available_space,
+                stored_files: node.stored_files.keys().cloned().collect(),
+                balance: node.balance,
+            })).collect(),
+            clients: self.clients.iter().map(|(id, client)| (*id, ClientStatus {
+                balance: client.balance,
+                files: client.files.clone(),
+            })).collect(),
             deals: self.deals.clone(),
             marketplace: self.marketplace.clone(),
         }
@@ -93,7 +112,7 @@ impl Network {
         &self.clients
     }
 
-    pub fn upload_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: String, data: Vec<u8>, replication: usize) -> Result<(), &'static str> {
+    pub fn upload_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), &'static str> {
         let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
         let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or("Storage node not found")?;
 
