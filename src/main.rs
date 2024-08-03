@@ -29,16 +29,15 @@ enum InputMode {
 struct App {
     input: String,
     input_mode: InputMode,
-    network: Network,
+    network: Arc<Mutex<Network>>,
     messages: Vec<String>,
     messages_state: ListState,
     scroll_offset: usize,
 }
 
 impl App {
-    fn new(debug_level: DebugLevel) -> App {
-        let mut network = Network::new();
-        network.set_debug_level(debug_level);
+    fn new(debug_level: DebugLevel, network: Arc<Mutex<Network>>) -> App {
+        network.lock().unwrap().set_debug_level(debug_level);
         App {
             input: String::new(),
             input_mode: InputMode::Normal,
@@ -62,18 +61,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
         run_replication_tests(&mut network, tx.clone());
     } else {
         // Run in normal mode
-        let mut network = Network::new();
-        let network_arc = Arc::new(Mutex::new(network.clone()));
+        let network = Arc::new(Mutex::new(Network::new()));
 
         let (tx, _rx) = broadcast::channel(100);
 
         let webui_handle = {
+            let network_clone = Arc::clone(&network);
+            let tx_clone = tx.clone();
             task::spawn(async move {
-                webui::start_webui(Arc::clone(&network_arc), tx.clone()).await;
+                webui::start_webui(network_clone, tx_clone).await;
             })
         };
 
         let terminal_handle = {
+            let network_clone = Arc::clone(&network);
             task::spawn_blocking(move || -> Result<(), Box<dyn Error + Send + Sync>> {
                 enable_raw_mode()?;
                 let mut stdout = io::stdout();
@@ -88,7 +89,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 };
 
                 let tick_rate = Duration::from_millis(250);
-                let mut app = App::new(debug_level);
+                let mut app = App::new(debug_level, network_clone);
                 app.messages.push("WebUI is available at http://localhost:3030".to_string());
                 let res = run_app(&mut terminal, app, tick_rate);
 
