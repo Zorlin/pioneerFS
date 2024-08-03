@@ -106,33 +106,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             })
         };
 
-        let _: Result<(), Box<dyn Error + Send + Sync>> = tokio::try_join!(
-            webui_handle as Result<_, Box<dyn Error + Send + Sync>>,
-            terminal_handle as Result<_, Box<dyn Error + Send + Sync>>,
-            async move {
-                loop {
-                    // Periodically update the network status in the WebUI
-                    {
-                        let network = network_arc.lock().unwrap();
-                        run_advanced_network_tests(&network);
-                    }
-                    tokio::time::sleep(Duration::from_secs(5)).await;
-                }
-            } as Result<_, Box<dyn Error + Send + Sync>>
-        )?;
-            webui_handle,
-            terminal_handle,
-            async move {
-                loop {
-                    // Periodically update the network status in the WebUI
-                    {
-                        let network = network_arc.lock().unwrap();
-                        run_advanced_network_tests(&network);
-                    }
-                    tokio::time::sleep(Duration::from_secs(5)).await;
-                }
-            }
-        )?;
+        webui_handle.await??;
+        terminal_handle.await??;
     }
 
     Ok(())
