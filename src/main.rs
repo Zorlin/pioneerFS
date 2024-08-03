@@ -59,7 +59,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         run_replication_tests(&mut network);
     } else {
         // Run in normal mode
-        println!("WebUI is available at http://localhost:3030");
         let webui_handle = task::spawn(async {
             webui::start_webui().await;
         });
@@ -79,6 +78,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             let tick_rate = Duration::from_millis(250);
             let app = App::new(debug_level);
+            let mut app = App::new(debug_level);
+            app.messages.push("WebUI is available at http://localhost:3030".to_string());
             let res = run_app(&mut terminal, app, tick_rate);
 
             disable_raw_mode()?;
