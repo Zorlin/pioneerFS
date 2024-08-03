@@ -130,7 +130,7 @@ impl Network {
         let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
         let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or("Storage node not found")?;
 
-        if !client.remove_file(filename, &deal.storage_node_id) {
+        if !client.remove_file(filename, storage_node_id) {
             return Err("File not found in client's list");
         }
 
