@@ -177,7 +177,7 @@ impl Network {
 
     pub fn upload_file(&mut self, client_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), String> {
         let encoded_chunks = self.erasure_code_file(&data);
-        let _total_chunks = encoded_chunks.len();
+        let total_chunks = encoded_chunks.len();
 
         // Select storage nodes
         let available_nodes: Vec<PeerId> = self.storage_nodes.keys().cloned().collect();
@@ -200,7 +200,9 @@ impl Network {
         }
 
         // Store chunks and create deals
-        for (i, (node_id, chunk)) in selected_nodes.iter().zip(encoded_chunks.iter()).enumerate() {
+        let mut stored_nodes = Vec::new();
+        for (i, chunk) in encoded_chunks.iter().enumerate() {
+            let node_id = &selected_nodes[i % selected_nodes.len()];
             let storage_node = self.storage_nodes.get_mut(node_id).unwrap();
             let chunk_filename = format!("{}_chunk_{}", filename, i);
             
@@ -219,14 +221,18 @@ impl Network {
                 chunk_filename,
                 DEAL_DURATION,
             ));
+
+            stored_nodes.push(*node_id);
         }
 
         // Update client's file record
         let client = self.clients.get_mut(client_id).ok_or_else(|| "Client not found".to_string())?;
-        client.add_file(filename.clone(), selected_nodes.clone());
+        client.add_file(filename.clone(), stored_nodes);
 
-        // Initiate replication process
-        self.replicate_file(client_id, &filename, REPLICATION_FACTOR - 1)?;
+        // Initiate replication process if needed
+        if total_chunks > REPLICATION_FACTOR {
+            self.replicate_file(client_id, &filename, total_chunks - REPLICATION_FACTOR)?;
+        }
 
         Ok(())
     }
@@ -259,16 +265,31 @@ impl Network {
         let storage_nodes = client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?;
 
         let mut chunks = Vec::new();
-        for (i, node_id) in storage_nodes.iter().enumerate() {
-            let storage_node = self.storage_nodes.get(node_id).ok_or_else(|| format!("Storage node {} not found", node_id))?;
-            let chunk_filename = format!("{}_chunk_{}", filename, i);
-            let chunk = storage_node.get_file(&chunk_filename).ok_or_else(|| format!("Chunk {} not found", i))?.clone();
+        let mut i = 0;
+        while let Some(chunk) = self.get_chunk(filename, i, &storage_nodes) {
             chunks.push(chunk);
+            i += 1;
+        }
+
+        if chunks.is_empty() {
+            return Err("No chunks found for the file".to_string());
         }
 
         // For our simple erasure coding, we just need to take every other chunk
         let original_data: Vec<u8> = chunks.into_iter().step_by(2).flatten().collect();
         Ok(original_data)
+    }
+
+    fn get_chunk(&self, filename: &str, chunk_index: usize, storage_nodes: &[PeerId]) -> Option<Vec<u8>> {
+        for node_id in storage_nodes {
+            if let Some(storage_node) = self.storage_nodes.get(node_id) {
+                let chunk_filename = format!("{}_chunk_{}", filename, chunk_index);
+                if let Some(chunk) = storage_node.get_file(&chunk_filename) {
+                    return Some(chunk.clone());
+                }
+            }
+        }
+        None
     }
 
     pub fn renew_deal(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<(), &'static str> {
