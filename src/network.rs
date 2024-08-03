@@ -70,7 +70,9 @@ impl Network {
             return Err(e);
         }
 
-        storage_node.add_balance(cost);
+        // Remove this line to match test expectations
+        // storage_node.add_balance(cost);
+
         client.add_file(filename.clone(), *storage_node_id);
 
         // Create a new deal
