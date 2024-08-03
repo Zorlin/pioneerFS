@@ -1,6 +1,6 @@
 use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
-use libp2p::{PeerId, kad::{Kademlia, store::MemoryStore}};
+use libp2p::{PeerId, kad::{store::MemoryStore, Kademlia}};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
