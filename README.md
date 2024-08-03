@@ -38,56 +38,37 @@ To start the testnet and interact with it:
 
 2. Start the testnet:
    ```
-   cargo run --bin testnet
+   cargo run
    ```
 
-3. The testnet will initialize and you'll see output in the console showing the creation of storage nodes and clients.
-
-### Deploying Smart Contracts
-
-Before interacting with the network, you need to deploy the necessary smart contracts:
-
-1. Install the Solidity compiler if you haven't already:
-   ```
-   npm install -g solc
-   ```
-
-2. Compile the smart contracts:
-   ```
-   solc --bin --abi contracts/*.sol -o build
-   ```
-
-3. Deploy the contracts to the testnet:
-   ```
-   cargo run --bin deploy_contracts
-   ```
-
-   This will deploy the contracts and output their addresses. Make note of these addresses as you'll need them for interacting with the network.
+3. The testnet will initialize and you'll see a terminal user interface (TUI) showing the network status and available commands.
 
 ### Interacting with the Network
 
-Once the testnet is running and contracts are deployed:
+Once the testnet is running:
 
-1. Interact with the network:
-   - To store a file: Enter `store <client_id> <storage_node_id> <filename> <file_content>`
-   - To retrieve a file: Enter `retrieve <client_id> <storage_node_id> <filename>`
-   - To remove a file: Enter `remove <client_id> <storage_node_id> <filename>`
-   - To check a client's balance: Enter `balance client <client_id>`
-   - To check a storage node's balance: Enter `balance node <storage_node_id>`
-   - To exit the program: Enter `exit`
+1. Use the TUI to interact with the network. Available commands include:
+   - `add_storage_node <price_per_gb>`: Add a new storage node with the specified price per GB
+   - `add_client`: Add a new client to the network
+   - `upload_file <client_id> <filename> <file_content>`: Upload a file to the network
+   - `download_file <client_id> <filename>`: Download a file from the network
+   - `remove_file <client_id> <filename>`: Remove a file from the network
+   - `list_files <client_id>`: List files stored by a client
+   - `get_balance <peer_id>`: Check the balance of a client or storage node
+   - `list_storage_offers`: View available storage offers in the marketplace
+   - `accept_storage_offer <client_id> <offer_index> <file_size>`: Accept a storage offer
 
-   Example:
-   ```
-   store 1 2 myfile.txt This is the content of my file
-   retrieve 1 2 myfile.txt
-   balance client 1
-   ```
+2. Enter commands in the input field at the bottom of the TUI.
 
-2. The program will provide feedback for each action, showing success messages or errors.
+3. The program will provide feedback for each action in the message area of the TUI.
 
 ### Stopping the Testnet
 
-To stop the testnet, simply press `Ctrl+C` in the terminal where it's running.
+To stop the testnet, press `q` or `Ctrl+C` in the terminal where it's running.
+
+### Smart Contracts
+
+The project uses built-in Rust implementations to simulate smart contract functionality. There's no need for external smart contract deployment.
 
 ## Project Structure
 
