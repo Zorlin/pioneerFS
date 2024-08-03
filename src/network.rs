@@ -99,6 +99,18 @@ impl Network {
         }
     }
 
+    pub fn add_bid(&mut self, filename: String, storage_node_id: PeerId, price_per_gb: u64) {
+        let bid = Bid {
+            storage_node_id,
+            price_per_gb,
+        };
+        self.bids.entry(filename).or_insert_with(Vec::new).push(bid);
+    }
+
+    pub fn get_bids(&self, filename: &str) -> Option<&Vec<Bid>> {
+        self.bids.get(filename)
+    }
+
     fn erasure_code_file(&self, data: &[u8]) -> Vec<Vec<u8>> {
         let mut chunks = Vec::new();
         for chunk in data.chunks(CHUNK_SIZE) {

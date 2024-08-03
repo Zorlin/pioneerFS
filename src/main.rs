@@ -255,7 +255,7 @@ fn execute_command(app: &mut App) {
             let filename = parts[3].to_string();
             let content = parts[4].as_bytes().to_vec();
 
-            match app.network.upload_file(&client_id, &sp_id, filename, content) {
+            match app.network.upload_file(&client_id, filename, content) {
                 Ok(_) => app.messages.push("File uploaded successfully".to_string()),
                 Err(e) => app.messages.push(format!("Failed to upload file: {}", e)),
             }
@@ -269,7 +269,7 @@ fn execute_command(app: &mut App) {
             let sp_id = PeerId::from_bytes(&hex::decode(parts[2]).unwrap()).unwrap();
             let filename = parts[3];
 
-            match app.network.download_file(&client_id, &sp_id, filename) {
+            match app.network.download_file(&client_id, filename) {
                 Ok(data) => app.messages.push(format!("Downloaded file content: {:?}", String::from_utf8_lossy(&data))),
                 Err(e) => app.messages.push(format!("Failed to download file: {}", e)),
             }

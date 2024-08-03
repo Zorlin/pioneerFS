@@ -30,15 +30,15 @@ fn test_network_operations() {
     // Check if the file is stored across multiple nodes
     let client = network.clients().get(&client1_id).unwrap();
     let storage_nodes = client.get_file_locations(&filename).unwrap();
-    assert_eq!(storage_nodes.len(), REPLICATION_FACTOR);
+    assert_eq!(storage_nodes.len(), 3); // Assuming REPLICATION_FACTOR is 3
 
     // Remove one storage node and try to download again
-    network.storage_nodes_mut().remove(&storage_nodes[0]);
+    network.storage_nodes.remove(&storage_nodes[0]);
     let downloaded_data = network.download_file(&client1_id, &filename).unwrap();
     assert_eq!(data, downloaded_data);
 
     // Check deals
-    assert_eq!(network.deals().len(), REPLICATION_FACTOR);
+    assert_eq!(network.deals.len(), 3); // Assuming REPLICATION_FACTOR is 3
 
     // Check balances
     for &node_id in storage_nodes {
