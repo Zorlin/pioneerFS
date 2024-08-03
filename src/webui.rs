@@ -1,9 +1,15 @@
 use warp::Filter;
+use crate::network::Network;
+use std::sync::{Arc, Mutex};
 
-pub async fn start_webui() {
-    let hello = warp::path::end().map(|| warp::reply::html("Hello, WebUI!"));
+pub async fn start_webui(network: Arc<Mutex<Network>>) {
+    let network_status = warp::path::end().map(move || {
+        let network = network.lock().unwrap();
+        let status = format!("{:?}", *network); // You can format this as needed
+        warp::reply::html(status)
+    });
 
-    warp::serve(hello)
+    warp::serve(network_status)
         .run(([127, 0, 0, 1], 3030))
         .await;
 }
