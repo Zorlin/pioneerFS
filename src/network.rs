@@ -281,7 +281,7 @@ impl Network {
 
         // Update client's file record
         let client = self.clients.get_mut(client_id).ok_or_else(|| "Client not found".to_string())?;
-        client.add_file(filename.clone(), stored_nodes);
+        client.add_file(filename.clone(), stored_nodes.clone());
         self.debug_log(&format!("Updated client {} file record for {}", client_id, filename));
 
         Ok(stored_nodes)
