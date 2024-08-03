@@ -23,7 +23,8 @@ impl ERC20 {
             allowances: HashMap::new(),
             debug: false,
             message_sender: None,
-        }
+        };
+        erc20
     }
 
     pub fn get_name(&self) -> &str {
