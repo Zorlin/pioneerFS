@@ -9,6 +9,13 @@ use rand::seq::SliceRandom;
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 const REPLICATION_FACTOR: usize = 3; // Default replication factor for the TESTNET
 
+#[derive(Debug, Clone, Copy)]
+pub enum DebugLevel {
+    None,
+    Low,
+    High,
+}
+
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NetworkStatus {
@@ -40,6 +47,7 @@ pub struct Network {
     pub marketplace: VecDeque<StorageOffer>,
     pub token: ERC20,
     pub bids: HashMap<String, Vec<Bid>>,
+    pub debug_level: DebugLevel,
 }
 
 pub struct Bid {
@@ -104,6 +112,18 @@ impl Network {
             marketplace: VecDeque::new(),
             token: ERC20::new("PioDollar".to_string(), "PIO".to_string(), 1_000_000_000), // 1 billion initial supply
             bids: HashMap::new(),
+            debug_level: DebugLevel::None,
+        }
+    }
+
+    pub fn set_debug_level(&mut self, level: DebugLevel) {
+        self.debug_level = level;
+    }
+
+    fn debug_log(&self, message: &str) {
+        match self.debug_level {
+            DebugLevel::Low | DebugLevel::High => println!("[DEBUG] {}", message),
+            DebugLevel::None => {},
         }
     }
 
@@ -165,6 +185,8 @@ impl Network {
     }
 
     pub fn upload_file(&mut self, client_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), String> {
+        self.debug_log(&format!("Uploading file: {} for client: {}", filename, client_id));
+
         // Select storage nodes
         let available_nodes: Vec<PeerId> = self.storage_nodes.keys().cloned().collect();
         if available_nodes.len() < REPLICATION_FACTOR {
@@ -172,12 +194,14 @@ impl Network {
         }
 
         let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), REPLICATION_FACTOR).cloned().collect();
+        self.debug_log(&format!("Selected nodes for storage: {:?}", selected_nodes));
 
         // Calculate total cost
         let file_size_gb = (data.len() as f64 / (1024.0 * 1024.0 * 1024.0)).ceil() as u64;
         let total_cost: u64 = selected_nodes.iter()
             .map(|node_id| file_size_gb * self.storage_nodes.get(node_id).unwrap().price_per_gb())
             .sum();
+        self.debug_log(&format!("Total cost for upload: {} tokens", total_cost));
 
         // Check if the client has enough balance
         let client_balance = self.token.balance_of(client_id);
@@ -198,6 +222,7 @@ impl Network {
             if !self.token.transfer(client_id, node_id, node_cost) {
                 return Err("Failed to transfer tokens".to_string());
             }
+            self.debug_log(&format!("Transferred {} tokens from {} to {} for storage", node_cost, client_id, node_id));
 
             self.deals.push(Deal::new(
                 *client_id,
@@ -205,6 +230,7 @@ impl Network {
                 filename.clone(),
                 DEAL_DURATION,
             ));
+            self.debug_log(&format!("Created new deal: client {} with storage node {} for file {}", client_id, node_id, filename));
 
             stored_nodes.push(*node_id);
         }
@@ -212,6 +238,7 @@ impl Network {
         // Update client's file record
         let client = self.clients.get_mut(client_id).ok_or_else(|| "Client not found".to_string())?;
         client.add_file(filename.clone(), stored_nodes);
+        self.debug_log(&format!("Updated client {} file record for {}", client_id, filename));
 
         Ok(())
     }

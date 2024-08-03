@@ -9,6 +9,7 @@ pub struct ERC20 {
     total_supply: u64,
     balances: HashMap<PeerId, u64>,
     allowances: HashMap<PeerId, HashMap<PeerId, u64>>,
+    debug: bool,
 }
 
 impl ERC20 {
@@ -19,6 +20,17 @@ impl ERC20 {
             total_supply: initial_supply,
             balances: HashMap::new(),
             allowances: HashMap::new(),
+            debug: false,
+        }
+    }
+
+    pub fn set_debug(&mut self, debug: bool) {
+        self.debug = debug;
+    }
+
+    fn debug_log(&self, message: &str) {
+        if self.debug {
+            println!("[ERC20 DEBUG] {}", message);
         }
     }
 
@@ -27,11 +39,14 @@ impl ERC20 {
     }
 
     pub fn transfer(&mut self, from: &PeerId, to: &PeerId, amount: u64) -> bool {
+        self.debug_log(&format!("Attempting transfer: {} tokens from {} to {}", amount, from, to));
         if self.balance_of(from) < amount {
+            self.debug_log("Transfer failed: Insufficient balance");
             return false;
         }
         *self.balances.entry(*from).or_insert(0) -= amount;
         *self.balances.entry(*to).or_insert(0) += amount;
+        self.debug_log("Transfer successful");
         true
     }
 
