@@ -1,9 +1,9 @@
 use crate::{StorageNode, Client};
 use libp2p::PeerId;
 use std::collections::{HashMap, VecDeque};
-use std::time::{Duration, SystemTime, Instant};
+use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
-use serde_with::{serde_as, DisplayFromStr, TimestampSeconds};
+use serde_with::{serde_as, DisplayFromStr};
 
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 const REPLICATION_FACTOR: usize = 3; // Default replication factor for the TESTNET
@@ -58,8 +58,8 @@ pub struct Deal {
     #[serde_as(as = "DisplayFromStr")]
     storage_node_id: PeerId,
     filename: String,
-    #[serde_as(as = "TimestampSeconds<i64>")]
-    start_time: SystemTime,
+    #[serde(skip)]
+    start_time: Instant,
     #[serde(with = "serde_millis")]
     duration: Duration,
 }
