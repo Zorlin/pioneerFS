@@ -204,7 +204,7 @@ fn execute_command(app: &mut App) {
             app.messages.push("Available commands:".to_string());
             app.messages.push("  help - Display this help message".to_string());
             app.messages.push("  add_client - Add a new client".to_string());
-            app.messages.push("  add_sp - Add a new storage provider (SP)".to_string());
+            app.messages.push("  add_sp <price_per_gb> - Add a new storage provider (SP)".to_string());
             app.messages.push("  list_clients - List all clients".to_string());
             app.messages.push("  list_sps - List all storage providers".to_string());
             app.messages.push("  upload_file <client_id> <sp_id> <filename> <content> - Upload a file".to_string());
@@ -212,6 +212,9 @@ fn execute_command(app: &mut App) {
             app.messages.push("  renew_deal <client_id> <sp_id> <filename> - Renew a storage deal".to_string());
             app.messages.push("  check_deals - Check and remove expired deals".to_string());
             app.messages.push("  get_reputation <sp_id> - Get the reputation of a storage provider".to_string());
+            app.messages.push("  add_storage_offer <sp_id> <price_per_gb> <available_space> - Add a storage offer to the marketplace".to_string());
+            app.messages.push("  list_storage_offers - List all storage offers in the marketplace".to_string());
+            app.messages.push("  accept_storage_offer <client_id> <offer_index> <file_size> - Accept a storage offer".to_string());
         }
         "add_client" => {
             let peer_id = PeerId::random();
@@ -294,6 +297,38 @@ fn execute_command(app: &mut App) {
                 app.messages.push(format!("Reputation of SP {}: {}", sp_id, sp.reputation()));
             } else {
                 app.messages.push(format!("Storage provider with ID {} not found", sp_id));
+            }
+        }
+        "add_storage_offer" => {
+            if parts.len() != 4 {
+                app.messages.push("Usage: add_storage_offer <sp_id> <price_per_gb> <available_space>".to_string());
+                return;
+            }
+            let sp_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
+            let price_per_gb = parts[2].parse::<u64>().unwrap();
+            let available_space = parts[3].parse::<usize>().unwrap();
+            app.network.add_storage_offer(sp_id, price_per_gb, available_space);
+            app.messages.push("Storage offer added to the marketplace".to_string());
+        }
+        "list_storage_offers" => {
+            let offers = app.network.get_storage_offers();
+            app.messages.push("Storage Offers:".to_string());
+            for (i, offer) in offers.iter().enumerate() {
+                app.messages.push(format!("  {}: SP: {}, Price per GB: {}, Available Space: {} bytes", 
+                    i, offer.storage_node_id, offer.price_per_gb, offer.available_space));
+            }
+        }
+        "accept_storage_offer" => {
+            if parts.len() != 4 {
+                app.messages.push("Usage: accept_storage_offer <client_id> <offer_index> <file_size>".to_string());
+                return;
+            }
+            let client_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
+            let offer_index = parts[2].parse::<usize>().unwrap();
+            let file_size = parts[3].parse::<usize>().unwrap();
+            match app.network.accept_storage_offer(&client_id, offer_index, file_size) {
+                Ok(_) => app.messages.push("Storage offer accepted successfully".to_string()),
+                Err(e) => app.messages.push(format!("Failed to accept storage offer: {}", e)),
             }
         }
         _ => {

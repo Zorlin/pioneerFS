@@ -57,4 +57,13 @@ impl Client {
     pub fn list_files(&self) -> &HashMap<String, Vec<PeerId>> {
         &self.files
     }
+
+    pub fn upload_file(&mut self, filename: String, data: Vec<u8>, storage_node: PeerId) -> Result<(), &'static str> {
+        self.files.entry(filename).or_insert_with(Vec::new).push(storage_node);
+        Ok(())
+    }
+
+    pub fn download_file(&self, filename: &str) -> Option<&Vec<PeerId>> {
+        self.files.get(filename)
+    }
 }

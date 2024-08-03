@@ -9,16 +9,18 @@ pub struct StorageNode {
     stored_files: HashMap<String, Vec<u8>>,
     available_space: usize,
     reputation: u64,
+    price_per_gb: u64,
 }
 
 impl StorageNode {
-    pub fn new(peer_id: PeerId) -> Self {
+    pub fn new(peer_id: PeerId, price_per_gb: u64) -> Self {
         StorageNode {
             peer_id,
             balance: 0,
             stored_files: HashMap::new(),
             available_space: MAX_STORAGE,
             reputation: 100, // Start with a base reputation
+            price_per_gb,
         }
     }
 
@@ -79,5 +81,22 @@ impl StorageNode {
 
     pub fn available_space(&self) -> usize {
         self.available_space
+    }
+
+    pub fn reserve_space(&mut self, size: usize) -> Result<(), &'static str> {
+        if size > self.available_space {
+            Err("Not enough available space")
+        } else {
+            self.available_space -= size;
+            Ok(())
+        }
+    }
+
+    pub fn get_price_per_gb(&self) -> u64 {
+        self.price_per_gb
+    }
+
+    pub fn set_price_per_gb(&mut self, price: u64) {
+        self.price_per_gb = price;
     }
 }

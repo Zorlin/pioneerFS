@@ -1,6 +1,6 @@
 use crate::{StorageNode, Client};
 use libp2p::PeerId;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
@@ -9,6 +9,13 @@ pub struct Network {
     storage_nodes: HashMap<PeerId, StorageNode>,
     clients: HashMap<PeerId, Client>,
     deals: Vec<Deal>,
+    marketplace: VecDeque<StorageOffer>,
+}
+
+pub struct StorageOffer {
+    storage_node_id: PeerId,
+    price_per_gb: u64,
+    available_space: usize,
 }
 
 #[derive(Clone)]
@@ -26,6 +33,7 @@ impl Network {
             storage_nodes: HashMap::new(),
             clients: HashMap::new(),
             deals: Vec::new(),
+            marketplace: VecDeque::new(),
         }
     }
 
@@ -124,6 +132,45 @@ impl Network {
 
         let target_node = self.storage_nodes.get_mut(target_node_id).ok_or("Target storage node not found")?;
         target_node.store_file(filename.to_string(), file_data)?;
+
+        Ok(())
+    }
+
+    pub fn add_storage_offer(&mut self, storage_node_id: PeerId, price_per_gb: u64, available_space: usize) {
+        let offer = StorageOffer {
+            storage_node_id,
+            price_per_gb,
+            available_space,
+        };
+        self.marketplace.push_back(offer);
+    }
+
+    pub fn get_storage_offers(&self) -> &VecDeque<StorageOffer> {
+        &self.marketplace
+    }
+
+    pub fn accept_storage_offer(&mut self, client_id: &PeerId, offer_index: usize, file_size: usize) -> Result<(), &'static str> {
+        let offer = self.marketplace.get(offer_index).ok_or("Offer not found")?;
+        let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
+        let storage_node = self.storage_nodes.get_mut(&offer.storage_node_id).ok_or("Storage node not found")?;
+
+        if file_size > offer.available_space {
+            return Err("Not enough space in the offer");
+        }
+
+        let price = (file_size as u64 * offer.price_per_gb) / (1024 * 1024 * 1024); // Convert to GB
+        if !client.subtract_balance(price) {
+            return Err("Client doesn't have enough balance");
+        }
+
+        storage_node.add_balance(price);
+        storage_node.reserve_space(file_size);
+
+        // Remove the offer and add a new one with updated available space
+        self.marketplace.remove(offer_index);
+        if offer.available_space > file_size {
+            self.add_storage_offer(offer.storage_node_id, offer.price_per_gb, offer.available_space - file_size);
+        }
 
         Ok(())
     }
