@@ -59,9 +59,25 @@ pub struct Deal {
     storage_node_id: PeerId,
     filename: String,
     #[serde(skip)]
-    start_time: Instant,
+    start_time: Option<Instant>,
     #[serde(with = "serde_millis")]
     duration: Duration,
+}
+
+impl Deal {
+    pub fn new(client_id: PeerId, storage_node_id: PeerId, filename: String, duration: Duration) -> Self {
+        Self {
+            client_id,
+            storage_node_id,
+            filename,
+            start_time: Some(Instant::now()),
+            duration,
+        }
+    }
+
+    pub fn start_time(&self) -> Instant {
+        self.start_time.unwrap_or_else(Instant::now)
+    }
 }
 
 impl Network {
@@ -125,13 +141,12 @@ impl Network {
         client.add_file(filename.clone(), *storage_node_id);
 
         // Create a new deal
-        self.deals.push(Deal {
-            client_id: *client_id,
-            storage_node_id: *storage_node_id,
-            filename: filename.clone(),
-            start_time: Instant::now(),
-            duration: DEAL_DURATION,
-        });
+        self.deals.push(Deal::new(
+            *client_id,
+            *storage_node_id,
+            filename.clone(),
+            DEAL_DURATION,
+        ));
 
         // Chain upload to other storage nodes
         self.chain_upload(storage_node_id, &filename, &data, REPLICATION_FACTOR - 1)?;
@@ -179,7 +194,7 @@ impl Network {
     pub fn check_deals(&mut self) {
         let mut expired_deals = Vec::new();
         for deal in &self.deals {
-            if deal.start_time.elapsed() > deal.duration {
+            if deal.start_time().elapsed() > deal.duration {
                 expired_deals.push(deal.clone());
             }
         }
