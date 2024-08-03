@@ -11,8 +11,8 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame, Terminal,
 };
-use std::{error::Error, io, time::{Duration, Instant}};
-use pioneerfs::Network;
+use std::{env, error::Error, io, time::{Duration, Instant}};
+use pioneerfs::{Network, DebugLevel};
 use libp2p::PeerId;
 
 enum InputMode {
@@ -28,11 +28,13 @@ struct App {
 }
 
 impl App {
-    fn new() -> App {
+    fn new(debug_level: DebugLevel) -> App {
+        let mut network = Network::new();
+        network.set_debug_level(debug_level);
         App {
             input: String::new(),
             input_mode: InputMode::Normal,
-            network: Network::new(),
+            network,
             messages: Vec::new(),
         }
     }
@@ -46,9 +48,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    // Parse command line arguments
+    let args: Vec<String> = env::args().collect();
+    let debug_level = if args.contains(&"--debug".to_string()) {
+        DebugLevel::High
+    } else {
+        DebugLevel::None
+    };
+
     // create app and run it
     let tick_rate = Duration::from_millis(250);
-    let app = App::new();
+    let app = App::new(debug_level);
     let res = run_app(&mut terminal, app, tick_rate);
 
     // restore terminal

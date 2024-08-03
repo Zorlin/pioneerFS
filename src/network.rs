@@ -16,6 +16,12 @@ pub enum DebugLevel {
     High,
 }
 
+impl DebugLevel {
+    pub fn is_enabled(&self) -> bool {
+        matches!(self, DebugLevel::Low | DebugLevel::High)
+    }
+}
+
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NetworkStatus {
@@ -121,9 +127,8 @@ impl Network {
     }
 
     fn debug_log(&self, message: &str) {
-        match self.debug_level {
-            DebugLevel::Low | DebugLevel::High => println!("[DEBUG] {}", message),
-            DebugLevel::None => {},
+        if self.debug_level.is_enabled() {
+            println!("[DEBUG] {}", message);
         }
     }
 
