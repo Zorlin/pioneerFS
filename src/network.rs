@@ -110,6 +110,8 @@ impl Network {
 
     pub fn add_client(&mut self, peer_id: PeerId) {
         self.clients.insert(peer_id, Client::new(peer_id));
+        // Initialize client with 1,000,000 tokens
+        self.token.transfer(&PeerId::random(), &peer_id, 1_000_000);
     }
 
     pub fn list_clients(&self) -> Vec<PeerId> {
@@ -140,8 +142,13 @@ impl Network {
         let cost = file_size_gb * storage_node.price_per_gb();
 
         // Check if the client has enough balance and transfer tokens
+        let client_balance = self.token.balance_of(client_id);
+        if client_balance < cost {
+            return Err(format!("Insufficient balance to upload file. Required: {}, Available: {}", cost, client_balance));
+        }
+
         if !self.token.transfer(client_id, storage_node_id, cost) {
-            return Err("Insufficient balance to upload file".to_string());
+            return Err("Failed to transfer tokens".to_string());
         }
 
         if let Err(e) = storage_node.store_file(filename.clone(), data.clone()) {

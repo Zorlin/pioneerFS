@@ -51,7 +51,7 @@ mod tests {
 
         // Upload file
         network.upload_file(&client_id, &storage_node_id, filename.clone(), data.clone())
-            .expect("Failed to upload file");
+            .unwrap_or_else(|e| panic!("Failed to upload file: {}", e));
 
         // Download file
         let downloaded_data = network.download_file(&client_id, &storage_node_id, &filename).unwrap();
