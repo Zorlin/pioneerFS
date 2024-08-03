@@ -5,7 +5,7 @@ use libp2p::{futures::StreamExt,
     identity, noise, yamux,
     swarm::{Swarm, SwarmEvent},
     SwarmBuilder,
-    kad::{self, store::MemoryStore, Event},
+    kad::{self, store::MemoryStore},
     PeerId, Transport,
 };
 use std::error::Error;
@@ -197,7 +197,7 @@ impl Network {
         let kademlia = kad::Behaviour::new(local_peer_id.clone(), store);
         let behaviour = NetworkBehaviourImpl { kademlia };
         let swarm = SwarmBuilder::with_existing_identity(local_key)
-            .with_transport(transport)
+            .transport(transport)
             .behaviour(behaviour)
             .executor(Box::new(|fut| {
                 tokio::spawn(fut);
@@ -233,14 +233,13 @@ impl Network {
                         println!("Connection closed with {:?}", peer_id);
                     }
                 }
-                SwarmEvent::IncomingConnection { local_addr, send_back_addr, connection_id } => {
+                SwarmEvent::IncomingConnection { local_addr, send_back_addr, connection_id: _ } => {
                     println!("Incoming connection from {:?} to {:?}", send_back_addr, local_addr);
                 }
                 SwarmEvent::Behaviour(NetworkBehaviourImplEvent::Kademlia(kad::Event::OutboundQueryProgressed { result, .. })) => {
                     println!("Query completed: {:?}", result);
                 }
                 _ => println!("Unhandled Kademlia event: {:?}", event),
-                _ => {}
             }
         }
         Ok(())
