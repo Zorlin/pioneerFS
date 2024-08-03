@@ -187,7 +187,7 @@ impl Network {
             .find(|d| d.client_id == *client_id && d.storage_node_id == *storage_node_id && d.filename == filename)
             .ok_or("Deal not found")?;
 
-        deal.start_time = Instant::now();
+        deal.start_time = Some(Instant::now());
         Ok(())
     }
 
