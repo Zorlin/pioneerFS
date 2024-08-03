@@ -15,7 +15,7 @@ pub enum DebugLevel {
     Low,
     High,
 
-impl Network {
+pub struct Network {
     pub message_sender: Option<Sender<String>>,
 
 impl Network {
