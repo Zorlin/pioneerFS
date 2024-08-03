@@ -3,13 +3,17 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     core::transport::Transport,
     identity,
-    kad::{store::MemoryStore, Kademlia, KademliaConfig, KademliaEvent},
+    kad::{store::MemoryStore, Kademlia, KademliaConfig, KademliaEvent, record::store::MemoryStore as KademliaMemoryStore},
     noise,
-    swarm::{Swarm, SwarmEvent},
+    swarm::{Swarm, SwarmEvent, SwarmBuilder},
     tcp,
     yamux,
     PeerId,
 };
+use libp2p::core::upgrade::Version;
+use libp2p::tcp::TokioTcpConfig;
+use libp2p::noise::NoiseConfig;
+use libp2p::yamux::YamuxConfig;
 use std::error::Error;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
@@ -188,19 +192,17 @@ impl Network {
         let local_peer_id = PeerId::from(local_key.public());
         println!("Local peer id: {:?}", local_peer_id);
 
-        let transport = tcp::TokioTcpConfig::new()
+        let transport = TokioTcpConfig::new()
             .nodelay(true)
-            .upgrade(libp2p::core::upgrade::Version::V1)
-            .authenticate(noise::NoiseConfig::xx(local_key).into_authenticated())
-            .multiplex(yamux::YamuxConfig::default())
+            .upgrade(Version::V1)
+            .authenticate(NoiseConfig::xx(local_key).into_authenticated())
+            .multiplex(YamuxConfig::default())
             .boxed();
 
-        let store = MemoryStore::new(local_peer_id);
+        let store = KademliaMemoryStore::new(local_peer_id);
         let kademlia = Kademlia::new(local_peer_id, store);
-        let mut swarm = Swarm::new(transport, kademlia, local_peer_id);
-
-        // Listen on all interfaces and whatever port the OS assigns
-        swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
+        let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id)
+            .build();
 
         let mut network = Network {
             message_sender: None,
