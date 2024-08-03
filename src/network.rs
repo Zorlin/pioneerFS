@@ -176,14 +176,23 @@ impl Network {
     }
 
     pub fn upload_file(&mut self, client_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), String> {
-        let encoded_chunks = self.erasure_code_file(&data);
-        let total_chunks = encoded_chunks.len();
+        // Calculate the cost of storage (1 token per chunk)
+        let total_chunks = (data.len() + CHUNK_SIZE - 1) / CHUNK_SIZE;
+        let storage_cost = total_chunks as u64;
+
+        // Check if the client has enough balance
+        if self.get_balance(client_id) < storage_cost {
+            return Err("Insufficient balance for file upload".to_string());
+        }
 
         // Select storage nodes
         let available_nodes: Vec<PeerId> = self.storage_nodes.keys().cloned().collect();
         if available_nodes.len() < REPLICATION_FACTOR {
             return Err("Not enough storage nodes available".to_string());
         }
+
+        // Deduct tokens from the client
+        self.token.transfer(client_id, &PeerId::random(), storage_cost);
 
         let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), REPLICATION_FACTOR).cloned().collect();
 
