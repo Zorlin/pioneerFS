@@ -76,13 +76,20 @@ fn test_split_retrieval() {
 
     // Retrieve the file using split retrieval
     let locations = network.get_file_locations(&client_id, &filename).unwrap();
-    let mut retrieved_data = Vec::new();
+    let mut retrieved_data = vec![0u8; data.len()];
+    let mut retrieved_parts = 0;
 
     for node_id in locations {
         if let Ok(part) = network.get_file_content(&node_id, &filename) {
-            retrieved_data.extend(part);
+            for (i, &byte) in part.iter().enumerate() {
+                if retrieved_data[i] == 0 {
+                    retrieved_data[i] = byte;
+                    retrieved_parts += 1;
+                }
+            }
         }
     }
 
+    assert_eq!(retrieved_parts, data.len(), "All parts of the data should be retrieved");
     assert_eq!(data, retrieved_data, "Retrieved data should match the original data");
 }
