@@ -1,6 +1,16 @@
 use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
-use libp2p::{PeerId, kad::{store::MemoryStore, Kademlia}};
+use libp2p::{
+    core::transport::Transport,
+    identity,
+    kad::{store::MemoryStore, Kademlia, KademliaConfig, KademliaEvent},
+    noise,
+    swarm::{Swarm, SwarmEvent},
+    tcp,
+    yamux,
+    PeerId,
+};
+use std::error::Error;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
@@ -116,7 +126,7 @@ pub struct Network {
     pub token: ERC20,
     pub bids: HashMap<String, Vec<Bid>>,
     pub debug_level: DebugLevel,
-    pub kademlia: Kademlia<MemoryStore>,
+    pub swarm: Swarm<Kademlia<MemoryStore>>,
 }
 
 pub struct Bid {
@@ -173,9 +183,24 @@ impl Deal {
 }
 
 impl Network {
-    pub fn new() -> Self {
-        let store = MemoryStore::new(PeerId::random());
-        let kademlia = Kademlia::new(PeerId::random(), store);
+    pub fn new() -> Result<Self, Box<dyn Error>> {
+        let local_key = identity::Keypair::generate_ed25519();
+        let local_peer_id = PeerId::from(local_key.public());
+        println!("Local peer id: {:?}", local_peer_id);
+
+        let transport = tcp::TokioTcpConfig::new()
+            .nodelay(true)
+            .upgrade(libp2p::core::upgrade::Version::V1)
+            .authenticate(noise::NoiseConfig::xx(local_key).into_authenticated())
+            .multiplex(yamux::YamuxConfig::default())
+            .boxed();
+
+        let store = MemoryStore::new(local_peer_id);
+        let kademlia = Kademlia::new(local_peer_id, store);
+        let mut swarm = Swarm::new(transport, kademlia, local_peer_id);
+
+        // Listen on all interfaces and whatever port the OS assigns
+        swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
 
         let mut network = Network {
             message_sender: None,
@@ -186,7 +211,7 @@ impl Network {
             token: ERC20::new("PioDollar".to_string(), "PIO".to_string(), 1_000_000_000), // 1 billion initial supply
             bids: HashMap::new(),
             debug_level: DebugLevel::None,
-            kademlia,
+            swarm,
         };
 
         // Initialize with at least one storage node and one client
@@ -194,7 +219,21 @@ impl Network {
         let initial_storage_node_id = PeerId::random();
         network.add_storage_node(initial_storage_node_id, 10); // Example price per GB
 
-        network
+        Ok(network)
+    }
+
+    pub async fn run(&mut self) -> Result<(), Box<dyn Error>> {
+        loop {
+            match self.swarm.next().await {
+                Some(SwarmEvent::NewListenAddr { address, .. }) => {
+                    println!("Listening on {:?}", address);
+                }
+                Some(SwarmEvent::Behaviour(KademliaEvent::OutboundQueryCompleted { result, .. })) => {
+                    println!("Query completed: {:?}", result);
+                }
+                _ => {}
+            }
+        }
     }
 
     pub fn get_network_status(&self) -> NetworkStatus {
