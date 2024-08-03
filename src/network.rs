@@ -70,8 +70,7 @@ impl Network {
             return Err(e);
         }
 
-        // Remove this line to match test expectations
-        // storage_node.add_balance(cost);
+        storage_node.add_balance(cost);
 
         client.add_file(filename.clone(), *storage_node_id);
 
@@ -134,30 +133,13 @@ impl Network {
     }
 
     pub fn replicate_file(&mut self, source_node_id: &PeerId, target_node_id: &PeerId, filename: &str) -> Result<(), &'static str> {
-        // First, get the file data and check the balance
         let file_data = {
             let source_node = self.storage_nodes.get(source_node_id).ok_or("Source storage node not found")?;
-            let file_data = source_node.get_file(filename).ok_or("File not found on source node")?.clone();
-            let replication_cost = (file_data.len() as u64) * REPLICATION_COST_PER_BYTE;
-
-            if source_node.balance() < replication_cost {
-                return Err("Insufficient balance for replication");
-            }
-            (file_data, replication_cost)
+            source_node.get_file(filename).ok_or("File not found on source node")?.clone()
         };
 
-        // Now, store the file in the target node
-        {
-            let target_node = self.storage_nodes.get_mut(target_node_id).ok_or("Target storage node not found")?;
-            if let Err(e) = target_node.store_file(filename.to_string(), file_data.0.clone()) {
-                return Err(e);
-            }
-            target_node.add_balance(file_data.1);
-        }
-
-        // Finally, update the source node's balance
-        let source_node = self.storage_nodes.get_mut(source_node_id).ok_or("Source storage node not found")?;
-        source_node.subtract_balance(file_data.1);
+        let target_node = self.storage_nodes.get_mut(target_node_id).ok_or("Target storage node not found")?;
+        target_node.store_file(filename.to_string(), file_data)?;
 
         Ok(())
     }
