@@ -18,7 +18,9 @@ pub enum DebugLevel {
 impl DebugLevel {
     pub fn is_enabled(&self) -> bool {
         matches!(self, DebugLevel::Low | DebugLevel::High)
-    }
+        };
+        self.debug_log(&format!("Network status: {:?}", status));
+        status
 }
 
 impl Network {
@@ -83,6 +85,7 @@ impl Network {
 
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct NetworkStatus {
     #[serde_as(as = "Vec<DisplayFromStr>")]
     pub storage_nodes: Vec<PeerId>,
@@ -190,7 +193,7 @@ impl Network {
     }
 
     pub fn get_network_status(&self) -> NetworkStatus {
-        NetworkStatus {
+        let status = NetworkStatus {
             storage_nodes: self.storage_nodes.keys().cloned().collect(),
             clients: self.clients.keys().cloned().collect(),
             deals: self.deals.len(),
