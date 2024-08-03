@@ -20,6 +20,40 @@ impl DebugLevel {
     pub fn is_enabled(&self) -> bool {
         matches!(self, DebugLevel::Low | DebugLevel::High)
     }
+
+    pub fn request_higher_replication(&mut self, client_id: &PeerId, filename: &str, new_replication_factor: usize) -> Result<(), String> {
+        self.debug_log(&format!("Requesting higher replication for file: {} from client: {} to factor: {}", filename, client_id, new_replication_factor));
+
+        let client = self.clients.get(client_id).ok_or_else(|| "Client not found".to_string())?;
+        let current_storage_nodes = client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?;
+
+        if new_replication_factor <= current_storage_nodes.len() {
+            return Err(format!("New replication factor must be higher than current ({}).", current_storage_nodes.len()));
+        }
+
+        let additional_replications = new_replication_factor - current_storage_nodes.len();
+        let available_nodes: Vec<PeerId> = self.storage_nodes.keys()
+            .filter(|&id| !current_storage_nodes.contains(id))
+            .cloned()
+            .collect();
+
+        if available_nodes.len() < additional_replications {
+            return Err(format!("Not enough additional storage nodes available. Required: {}, Available: {}", additional_replications, available_nodes.len()));
+        }
+
+        let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), additional_replications).cloned().collect();
+
+        // Here we would normally retrieve the file data and replicate it to the new nodes
+        // For now, we'll just update the client's file locations
+        if let Some(client) = self.clients.get_mut(client_id) {
+            let mut updated_locations = current_storage_nodes.clone();
+            updated_locations.extend(selected_nodes);
+            client.add_file(filename.to_string(), updated_locations);
+        }
+
+        self.debug_log(&format!("Successfully increased replication factor for file: {} to {}", filename, new_replication_factor));
+        Ok(())
+    }
 }
 
 #[serde_as]
@@ -189,16 +223,16 @@ impl Network {
         self.token.balance_of(peer_id)
     }
 
-    pub fn upload_file(&mut self, client_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), String> {
-        self.debug_log(&format!("Uploading file: {} for client: {}", filename, client_id));
+    pub fn upload_file(&mut self, client_id: &PeerId, filename: String, data: Vec<u8>, replication_factor: usize) -> Result<(), String> {
+        self.debug_log(&format!("Uploading file: {} for client: {} with replication factor: {}", filename, client_id, replication_factor));
 
         // Select storage nodes
         let available_nodes: Vec<PeerId> = self.storage_nodes.keys().cloned().collect();
-        if available_nodes.len() < REPLICATION_FACTOR {
-            return Err("Not enough storage nodes available".to_string());
+        if available_nodes.len() < replication_factor {
+            return Err(format!("Not enough storage nodes available. Required: {}, Available: {}", replication_factor, available_nodes.len()));
         }
 
-        let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), REPLICATION_FACTOR).cloned().collect();
+        let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), replication_factor).cloned().collect();
         self.debug_log(&format!("Selected nodes for storage: {:?}", selected_nodes));
 
         // Calculate total cost
