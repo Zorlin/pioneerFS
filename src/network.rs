@@ -99,6 +99,7 @@ pub struct ClientStatus {
 }
 
 pub struct Network {
+    pub message_sender: Option<Sender<String>>,
     pub storage_nodes: HashMap<PeerId, StorageNode>,
     pub clients: HashMap<PeerId, Client>,
     pub deals: Vec<Deal>,
