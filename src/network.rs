@@ -132,6 +132,7 @@ pub struct Network {
     pub bids: HashMap<String, Vec<Bid>>,
     pub debug_level: DebugLevel,
     pub kademlia: Kademlia<MemoryStore>,
+    pub kademlia: Kademlia<MemoryStore>,
 }
 
 pub struct Bid {
