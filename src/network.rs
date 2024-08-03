@@ -3,7 +3,7 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
-    swarm::{Swarm, SwarmBuilder, SwarmEvent},
+    swarm::{Swarm, SwarmEvent},
     SwarmBuilder,
     kad::{self, store::MemoryStore, Event},
     PeerId, Transport,
