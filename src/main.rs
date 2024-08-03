@@ -27,6 +27,7 @@ struct App {
     messages: Vec<String>,
     messages_state: ListState,
     scroll_offset: usize,
+    total_messages: usize,
 }
 
 impl App {
@@ -40,6 +41,7 @@ impl App {
             messages: Vec::new(),
             messages_state: ListState::default(),
             scroll_offset: 0,
+            total_messages: 0,
         }
     }
 }
@@ -205,13 +207,13 @@ fn ui(f: &mut Frame, app: &mut App) {
     }
 
     let messages_height = chunks[2].height as usize - 2; // Subtract 2 for the border
-    let messages_len = app.messages.len();
-    let max_scroll = messages_len.saturating_sub(messages_height);
+    let max_scroll = app.total_messages.saturating_sub(messages_height);
     let start_index = app.scroll_offset.min(max_scroll);
-    let end_index = (start_index + messages_height).min(messages_len);
+    let end_index = (start_index + messages_height).min(app.total_messages);
     
-    let messages: Vec<ListItem> = app.messages[start_index..end_index]
-        .iter()
+    let messages: Vec<ListItem> = app.messages.iter()
+        .skip(start_index)
+        .take(end_index - start_index)
         .enumerate()
         .map(|(i, m)| {
             let content = vec![Line::from(Span::raw(format!("{}: {}", start_index + i + 1, m)))];
@@ -220,7 +222,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         .collect();
     
     let messages = List::new(messages)
-        .block(Block::default().borders(Borders::ALL).title(format!("Messages ({}-{}/{})", start_index + 1, end_index, messages_len)))
+        .block(Block::default().borders(Borders::ALL).title(format!("Messages ({}-{}/{})", start_index + 1, end_index, app.total_messages)))
         .highlight_style(Style::default().add_modifier(Modifier::BOLD))
         .highlight_symbol("> ");
     
@@ -230,6 +232,7 @@ fn ui(f: &mut Frame, app: &mut App) {
 fn execute_command(app: &mut App) {
     let command = app.input.trim();
     app.messages.push(format!("Executing: {}", command));
+    app.total_messages += 1;
 
     let parts: Vec<&str> = command.split_whitespace().collect();
     if parts.is_empty() {
