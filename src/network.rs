@@ -40,6 +40,12 @@ pub struct Network {
     deals: Vec<Deal>,
     marketplace: VecDeque<StorageOffer>,
     pub token: ERC20,
+    bids: HashMap<String, Vec<Bid>>,
+}
+
+pub struct Bid {
+    storage_node_id: PeerId,
+    price_per_gb: u64,
 }
 
 #[serde_as]
