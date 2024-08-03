@@ -398,7 +398,8 @@ fn execute_command(app: &mut App) {
             app.messages.push("Storage offer added to the marketplace".to_string());
         }
         "list_storage_offers" => {
-            let offers = app.network.lock().unwrap().get_storage_offers();
+            let network = app.network.lock().unwrap();
+            let offers = network.get_storage_offers();
             app.messages.push("Storage Offers:".to_string());
             for (i, offer) in offers.iter().enumerate() {
                 app.messages.push(format!("  {}: SP: {}, Price per GB: {}, Available Space: {} bytes", 
