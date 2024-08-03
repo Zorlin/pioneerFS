@@ -174,6 +174,16 @@ impl Network {
         }
     }
 
+    fn debug_log(&self, message: &str) {
+        if self.debug_level.is_enabled() {
+            println!("[DEBUG] {}", message);
+        }
+    }
+
+    pub fn set_debug_level(&mut self, level: DebugLevel) {
+        self.debug_level = level;
+    }
+
     pub fn get_network_status(&self) -> NetworkStatus {
         NetworkStatus {
             storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, StorageNodeStatus {
