@@ -70,7 +70,7 @@ impl Network {
         }
 
         self.debug_log(&format!("Successfully increased replication factor for file: {} to {}", filename, new_replication_factor));
-        Ok(stored_nodes)
+        Ok(())
     }
 }
 
