@@ -4,7 +4,7 @@ use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
     swarm::{Swarm, SwarmEvent, NetworkBehaviour},
-    kad::Kademlia,
+    kad,
     PeerId, Transport,
 };
 use std::error::Error;
@@ -124,7 +124,7 @@ pub struct Network {
     pub bids: HashMap<String, Vec<Bid>>,
     pub debug_level: DebugLevel,
     pub swarm: Swarm<NetworkBehaviourImpl>,
-    pub kademlia: Kademlia<MemoryStore>,
+    pub kademlia: kad::Kademlia<kad::store::MemoryStore>,
 }
 
 pub struct Bid {
@@ -487,5 +487,5 @@ impl Network {
 }
 #[derive(NetworkBehaviour)]
 struct NetworkBehaviourImpl {
-    kademlia: Kademlia<MemoryStore>,
+    kademlia: kad::Kademlia<kad::store::MemoryStore>,
 }
