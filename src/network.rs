@@ -58,17 +58,10 @@ impl Network {
         let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
         let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or("Storage node not found")?;
 
-        let cost = data.len() as u64; // Cost is equal to the file size in bytes
-        if !client.subtract_balance(cost) {
-            return Err("Insufficient balance for upload");
-        }
-
         if let Err(e) = storage_node.store_file(filename.clone(), data.clone()) {
-            client.add_balance(cost); // Refund the client if storage fails
             return Err(e);
         }
 
-        storage_node.add_balance(cost); // Add the cost to the storage node's balance
         client.add_file(filename.clone(), *storage_node_id);
 
         // Create a new deal
