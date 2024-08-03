@@ -206,7 +206,7 @@ fn ui(f: &mut Frame, app: &mut App) {
 
     let messages_height = chunks[2].height as usize - 2; // Subtract 2 for the border
     let total_messages = app.messages.len();
-    let max_scroll = total_messages.saturating_sub(messages_height);
+    // Removed unused variable
     let start_index = (total_messages as i64 - messages_height as i64 - app.scroll_offset as i64).max(0) as usize;
     let end_index = (start_index + messages_height).min(total_messages);
     
