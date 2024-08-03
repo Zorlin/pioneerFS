@@ -10,7 +10,7 @@ test = true
 doctest = true
 
 [dependencies]
-libp2p = { version = "0.53", features = ["tcp", "mdns", "gossipsub", "noise", "yamux", "ping", "serde", "kad", "identify"] }
+libp2p = { version = "0.53", features = ["tcp", "mdns", "gossipsub", "noise", "yamux", "ping", "serde", "kad", "identify", "macros"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_with = "3.4"
