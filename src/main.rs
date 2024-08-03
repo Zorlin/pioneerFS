@@ -138,6 +138,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn adjust_pricing(network: &mut Network) {
+}
+
+fn run_replication_tests(network: &mut Network, tx: broadcast::Sender<String>) -> Result<(), Box<dyn Error>> {
+    let mut rng = rand::thread_rng();
+
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     mut app: App,
@@ -456,57 +462,6 @@ fn execute_command(app: &mut App) {
     }
 
     app.input.clear();
-}
-fn adjust_pricing(network: &mut Network) {
-    for sp in network.storage_nodes.values_mut() {
-        let usage_ratio = sp.used_space() as f64 / sp.total_space() as f64;
-        if usage_ratio > 0.8 {
-            sp.set_price_per_gb(sp.price_per_gb() + 1); // Increase price if usage is above 80%
-        } else if usage_ratio < 0.2 {
-            sp.set_price_per_gb(sp.price_per_gb().saturating_sub(1)); // Decrease price if usage is below 20%
-        }
-    }
-}
-
-fn run_replication_tests(network: &mut Network, tx: broadcast::Sender<String>) {
-    let mut rng = rand::thread_rng();
-    let network = Arc::new(Mutex::new(Network::new()));
-    let (tx, rx) = broadcast::channel(100);
-
-    {
-        let mut network = network.lock().unwrap();
-        // Ensure we have at most 12 storage providers (SPs)
-        for _ in 0..12 {
-            let sp_id = PeerId::random();
-            network.add_storage_node(sp_id.clone(), rng.gen_range(10..20));
-            tx.send(format!("Added storage provider (SP) with PeerId: {}", sp_id)).unwrap();
-        }
-
-        for i in 0..100 {
-            let client_id = PeerId::random();
-            network.add_client(client_id.clone());
-            tx.send(format!("Added client with PeerId: {}", client_id)).unwrap();
-            
-            let filename = format!("test_file_{}.txt", i);
-            let data = vec![0u8; rng.gen_range(1000..10000)];
-            let replication_factor = rng.gen_range(2..5);
-            
-            match network.upload_file(&client_id, filename.clone(), data, replication_factor) {
-                Ok(_) => {
-                    println!("Test {}: File uploaded successfully", i);
-                    tx.send(format!("Test {}: File uploaded successfully", i)).unwrap();
-                }
-                Err(e) => {
-                    println!("Test {}: Upload failed - {}", i, e);
-                    tx.send(format!("Test {}: Upload failed - {}", i, e)).unwrap();
-                }
-            }
-            
-            // Display abstract network state
-            display_abstract_network(&network);
-        }
-    }
-    Ok(())
 }
     for sp in network.storage_nodes.values_mut() {
         let usage_ratio = sp.used_space() as f64 / sp.total_space() as f64;
