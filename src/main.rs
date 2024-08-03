@@ -7,7 +7,7 @@ use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame, Terminal,
 };
@@ -132,33 +132,36 @@ fn ui<B: ratatui::backend::Backend>(f: &mut Frame<B>, app: &App) {
     let (msg, style) = match app.input_mode {
         InputMode::Normal => (
             vec![
-                Span::raw("Press "),
-                Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to exit, "),
-                Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to start editing."),
-                Span::raw("\nType 'help' for available commands."),
+                Line::from(vec![
+                    Span::raw("Press "),
+                    Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to exit, "),
+                    Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to start editing."),
+                ]),
+                Line::from("Type 'help' for available commands."),
             ],
             Style::default().add_modifier(Modifier::RAPID_BLINK),
         ),
         InputMode::Editing => (
             vec![
-                Span::raw("Press "),
-                Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to stop editing, "),
-                Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to execute command"),
-                Span::raw("\nType 'help' for available commands."),
+                Line::from(vec![
+                    Span::raw("Press "),
+                    Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to stop editing, "),
+                    Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to execute command"),
+                ]),
+                Line::from("Type 'help' for available commands."),
             ],
             Style::default(),
         ),
     };
-    let mut text = ratatui::text::Text::from(Spans::from(msg));
-    text.patch_style(style);
+    let text = ratatui::text::Text::from(msg).patch_style(style);
     let help_message = Paragraph::new(text);
     f.render_widget(help_message, chunks[0]);
 
-    let input = Paragraph::new(app.input.as_ref())
+    let input = Paragraph::new(app.input.as_str())
         .style(match app.input_mode {
             InputMode::Normal => Style::default(),
             InputMode::Editing => Style::default().fg(Color::Yellow),
@@ -186,7 +189,7 @@ fn ui<B: ratatui::backend::Backend>(f: &mut Frame<B>, app: &App) {
         .iter()
         .enumerate()
         .map(|(i, m)| {
-            let content = vec![Spans::from(Span::raw(format!("{}: {}", i, m)))];
+            let content = vec![Line::from(format!("{}: {}", i, m))];
             ListItem::new(content)
         })
         .collect();
