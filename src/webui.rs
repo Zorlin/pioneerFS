@@ -9,7 +9,7 @@ pub async fn start_webui(network: Arc<Mutex<Network>>, tx: broadcast::Sender<Str
     let network_status = {
         let mut network = Arc::clone(&network);
         warp::path("status").map(move || {
-            let network = network.lock().unwrap();
+            let mut network = network.lock().unwrap();
             let status = json!({
                 "clients": network.clients.keys().collect::<Vec<_>>(),
                 "storage_nodes": network.storage_nodes.keys().collect::<Vec<_>>(),
