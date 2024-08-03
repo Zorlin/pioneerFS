@@ -7,6 +7,7 @@ use libp2p::{futures::StreamExt,
     SwarmBuilder,
     kad::{self, store::MemoryStore},
     PeerId, Transport,
+    tls
 };
 use std::error::Error;
 use std::collections::{HashMap, VecDeque};
@@ -197,9 +198,18 @@ impl Network {
         let kademlia = kad::Behaviour::new(local_peer_id.clone(), store);
         let behaviour = NetworkBehaviourImpl { kademlia };
         let swarm = SwarmBuilder::with_existing_identity(local_key)
-            .with_transport(transport)
-            .with_behaviour(|_| behaviour)
-            .build();
+            .with_tokio()
+            .with_tcp(
+                Default::default(),
+                (tls::Config::new, noise::Config::new),
+                yamux::Config::default,
+            )?
+            .with_quic()
+            .with_dns()?
+            .with_websocket(
+                (tls::Config::new, noise::Config::new),
+                yamux::Config::default,
+            );
 
         let network = Network {
             message_sender: None,
