@@ -59,42 +59,51 @@ async fn main() -> Result<(), Box<dyn Error>> {
         run_replication_tests(&mut network);
     } else {
         // Run in normal mode
-        let webui_handle = task::spawn(async {
-            webui::start_webui(network.clone()).await;
-        });
+        let mut network = Network::new();
+        let network_arc = Arc::new(Mutex::new(network));
 
-        let terminal_handle = task::spawn_blocking(move || -> Result<(), Box<dyn Error + Send + Sync>> {
-            enable_raw_mode()?;
-            let mut stdout = io::stdout();
-            execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-            let backend = CrosstermBackend::new(stdout);
-            let mut terminal = Terminal::new(backend)?;
+        let webui_handle = {
+            let network_clone = Arc::clone(&network_arc);
+            task::spawn(async move {
+                webui::start_webui(network_clone).await;
+            })
+        };
 
-            let debug_level = if args.contains(&"--debug".to_string()) {
-                DebugLevel::High
-            } else {
-                DebugLevel::None
-            };
+        let terminal_handle = {
+            let network_clone = Arc::clone(&network_arc);
+            task::spawn_blocking(move || -> Result<(), Box<dyn Error + Send + Sync>> {
+                enable_raw_mode()?;
+                let mut stdout = io::stdout();
+                execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+                let backend = CrosstermBackend::new(stdout);
+                let mut terminal = Terminal::new(backend)?;
 
-            let tick_rate = Duration::from_millis(250);
-            let mut app = App::new(debug_level);
-            app.messages.push("WebUI is available at http://localhost:3030".to_string());
-            let res = run_app(&mut terminal, app, tick_rate);
+                let debug_level = if args.contains(&"--debug".to_string()) {
+                    DebugLevel::High
+                } else {
+                    DebugLevel::None
+                };
 
-            disable_raw_mode()?;
-            execute!(
-                terminal.backend_mut(),
-                LeaveAlternateScreen,
-                DisableMouseCapture
-            )?;
-            terminal.show_cursor()?;
+                let tick_rate = Duration::from_millis(250);
+                let mut app = App::new(debug_level);
+                app.messages.push("WebUI is available at http://localhost:3030".to_string());
+                let res = run_app(&mut terminal, app, tick_rate);
 
-            if let Err(err) = res {
-                println!("{:?}", err)
-            }
+                disable_raw_mode()?;
+                execute!(
+                    terminal.backend_mut(),
+                    LeaveAlternateScreen,
+                    DisableMouseCapture
+                )?;
+                terminal.show_cursor()?;
 
-            Ok(())
-        });
+                if let Err(err) = res {
+                    println!("{:?}", err)
+                }
+
+                Ok(())
+            })
+        };
 
         let _ = tokio::try_join!(webui_handle, terminal_handle)?;
     }
