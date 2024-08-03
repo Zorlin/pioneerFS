@@ -149,20 +149,20 @@ impl Network {
 
     pub fn upload_file(&mut self, client_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), String> {
         let encoded_chunks = self.erasure_code_file(&data);
-        let total_chunks = encoded_chunks.len();
+        let _total_chunks = encoded_chunks.len();
 
         // Select storage nodes
-        let available_nodes: Vec<&PeerId> = self.storage_nodes.keys().collect();
+        let available_nodes: Vec<PeerId> = self.storage_nodes.keys().cloned().collect();
         if available_nodes.len() < REPLICATION_FACTOR {
             return Err("Not enough storage nodes available".to_string());
         }
 
-        let selected_nodes: Vec<&PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), REPLICATION_FACTOR).cloned().collect();
+        let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), REPLICATION_FACTOR).cloned().collect();
 
         // Calculate total cost
         let total_size_gb = (encoded_chunks.iter().map(|chunk| chunk.len()).sum::<usize>() as f64 / (1024.0 * 1024.0 * 1024.0)).ceil() as u64;
         let total_cost: u64 = selected_nodes.iter()
-            .map(|&node_id| total_size_gb * self.storage_nodes.get(node_id).unwrap().price_per_gb())
+            .map(|node_id| total_size_gb * self.storage_nodes.get(node_id).unwrap().price_per_gb())
             .sum();
 
         // Check if the client has enough balance
@@ -172,7 +172,7 @@ impl Network {
         }
 
         // Store chunks and create deals
-        for (i, (&node_id, chunk)) in selected_nodes.iter().zip(encoded_chunks.iter()).enumerate() {
+        for (i, (node_id, chunk)) in selected_nodes.iter().zip(encoded_chunks.iter()).enumerate() {
             let storage_node = self.storage_nodes.get_mut(node_id).unwrap();
             let chunk_filename = format!("{}_chunk_{}", filename, i);
             
@@ -195,7 +195,7 @@ impl Network {
 
         // Update client's file record
         let client = self.clients.get_mut(client_id).ok_or_else(|| "Client not found".to_string())?;
-        client.add_file(filename, selected_nodes.into_iter().cloned().collect());
+        client.add_file(filename, selected_nodes);
 
         Ok(())
     }
@@ -265,15 +265,18 @@ impl Network {
         }
     }
 
-    pub fn remove_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<(), &'static str> {
+    pub fn remove_file(&mut self, client_id: &PeerId, filename: &str) -> Result<(), &'static str> {
         let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
-        let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or("Storage node not found")?;
+        let storage_nodes = client.get_file_locations(filename).ok_or("File not found")?;
 
-        if !client.remove_file(filename, storage_node_id) {
-            return Err("File not found in client's list");
+        for &node_id in storage_nodes {
+            if let Some(storage_node) = self.storage_nodes.get_mut(&node_id) {
+                storage_node.remove_file(filename)?;
+            }
         }
 
-        storage_node.remove_file(filename)
+        client.remove_file(filename);
+        Ok(())
     }
 
     pub fn replicate_file(&mut self, source_node_id: &PeerId, target_node_id: &PeerId, filename: &str) -> Result<(), &'static str> {
