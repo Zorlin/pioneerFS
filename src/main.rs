@@ -299,7 +299,7 @@ fn execute_command(app: &mut App) {
         }
         "add_client" => {
             let peer_id = PeerId::random();
-            app.network.add_client(peer_id);
+            app.network.lock().unwrap().add_client(peer_id);
             app.messages.push(format!("Added client with PeerId: {}", peer_id));
         }
         "add_sp" => {
@@ -309,18 +309,18 @@ fn execute_command(app: &mut App) {
             }
             let peer_id = PeerId::random();
             let price_per_gb = parts[1].parse::<u64>().unwrap_or(0);
-            app.network.add_storage_node(peer_id, price_per_gb);
+            app.network.lock().unwrap().add_storage_node(peer_id, price_per_gb);
             app.messages.push(format!("Added storage provider (SP) with PeerId: {} and price per GB: {}", peer_id, price_per_gb));
         }
         "list_clients" => {
-            let clients = app.network.list_clients();
+            let clients = app.network.lock().unwrap().list_clients();
             app.messages.push("Clients:".to_string());
             for (i, client_id) in clients.iter().enumerate() {
                 app.messages.push(format!("  {}: {}", i + 1, client_id));
             }
         }
         "list_sps" => {
-            let sps = app.network.list_storage_nodes();
+            let sps = app.network.lock().unwrap().list_storage_nodes();
             app.messages.push("Storage Providers (SPs):".to_string());
             for (i, sp_id) in sps.iter().enumerate() {
                 app.messages.push(format!("  {}: {}", i + 1, sp_id));
@@ -337,7 +337,7 @@ fn execute_command(app: &mut App) {
             let content = parts[4].as_bytes().to_vec();
             let replication_factor = parts[5].parse::<usize>().unwrap_or(3); // Default to 3 if parsing fails
 
-            match app.network.upload_file(&client_id, filename, content, replication_factor) {
+            match app.network.lock().unwrap().upload_file(&client_id, filename, content, replication_factor) {
                 Ok(_) => app.messages.push(format!("File uploaded successfully with replication factor {}", replication_factor)),
                 Err(e) => app.messages.push(format!("Failed to upload file: {}", e)),
             }
@@ -351,7 +351,7 @@ fn execute_command(app: &mut App) {
             let _sp_id = PeerId::from_bytes(&hex::decode(parts[2]).unwrap()).unwrap();
             let filename = parts[3];
 
-            match app.network.download_file(&client_id, filename) {
+            match app.network.lock().unwrap().download_file(&client_id, filename) {
                 Ok(data) => app.messages.push(format!("Downloaded file content: {:?}", String::from_utf8_lossy(&data))),
                 Err(e) => app.messages.push(format!("Failed to download file: {}", e)),
             }
@@ -365,13 +365,13 @@ fn execute_command(app: &mut App) {
             let sp_id = PeerId::from_bytes(&hex::decode(parts[2]).unwrap()).unwrap();
             let filename = parts[3];
 
-            match app.network.renew_deal(&client_id, &sp_id, filename) {
+            match app.network.lock().unwrap().renew_deal(&client_id, &sp_id, filename) {
                 Ok(_) => app.messages.push("Deal renewed successfully".to_string()),
                 Err(e) => app.messages.push(format!("Failed to renew deal: {}", e)),
             }
         }
         "check_deals" => {
-            app.network.check_deals();
+            app.network.lock().unwrap().check_deals();
             app.messages.push("Checked and removed expired deals".to_string());
         }
         "get_reputation" => {
@@ -380,7 +380,7 @@ fn execute_command(app: &mut App) {
                 return;
             }
             let sp_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
-            if let Some(sp) = app.network.storage_nodes().get(&sp_id) {
+            if let Some(sp) = app.network.lock().unwrap().storage_nodes().get(&sp_id) {
                 app.messages.push(format!("Reputation of SP {}: {}", sp_id, sp.reputation()));
             } else {
                 app.messages.push(format!("Storage provider with ID {} not found", sp_id));
@@ -394,11 +394,11 @@ fn execute_command(app: &mut App) {
             let sp_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
             let price_per_gb = parts[2].parse::<u64>().unwrap();
             let available_space = parts[3].parse::<usize>().unwrap();
-            app.network.add_storage_offer(sp_id, price_per_gb, available_space);
+            app.network.lock().unwrap().add_storage_offer(sp_id, price_per_gb, available_space);
             app.messages.push("Storage offer added to the marketplace".to_string());
         }
         "list_storage_offers" => {
-            let offers = app.network.get_storage_offers();
+            let offers = app.network.lock().unwrap().get_storage_offers();
             app.messages.push("Storage Offers:".to_string());
             for (i, offer) in offers.iter().enumerate() {
                 app.messages.push(format!("  {}: SP: {}, Price per GB: {}, Available Space: {} bytes", 
@@ -413,7 +413,7 @@ fn execute_command(app: &mut App) {
             let client_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
             let offer_index = parts[2].parse::<usize>().unwrap();
             let file_size = parts[3].parse::<usize>().unwrap();
-            match app.network.accept_storage_offer(&client_id, offer_index, file_size) {
+            match app.network.lock().unwrap().accept_storage_offer(&client_id, offer_index, file_size) {
                 Ok(_) => app.messages.push("Storage offer accepted successfully".to_string()),
                 Err(e) => app.messages.push(format!("Failed to accept storage offer: {}", e)),
             }
@@ -426,7 +426,7 @@ fn execute_command(app: &mut App) {
             let client_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
             let filename = parts[2];
             let new_replication_factor = parts[3].parse::<usize>().unwrap_or(0);
-            match app.network.request_higher_replication(&client_id, filename, new_replication_factor) {
+            match app.network.lock().unwrap().request_higher_replication(&client_id, filename, new_replication_factor) {
                 Ok(_) => app.messages.push(format!("Successfully increased replication for file {} to factor {}", filename, new_replication_factor)),
                 Err(e) => app.messages.push(format!("Failed to increase replication: {}", e)),
             }
