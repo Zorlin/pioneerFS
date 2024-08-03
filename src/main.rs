@@ -158,7 +158,7 @@ fn ui(f: &mut Frame, app: &App) {
         ),
     };
     let text = ratatui::text::Text::from(msg).patch_style(style);
-    let help_message = Paragraph::new(text);
+    let help_message = Paragraph::new(text.clone());
     f.render_widget(help_message, chunks[0]);
 
     let input = Paragraph::new(app.input.as_str())
