@@ -16,7 +16,7 @@ mod tests {
 
     #[test]
     fn test_network_creation() -> Result<(), String> {
-        let network = Network::new().map_err(|e| format!("Failed to create network: {}", e))?;
+        let network = Network::new().expect("Failed to create network");
         assert!(!network.storage_nodes().is_empty(), "Network should initialize with default storage nodes");
         assert!(!network.clients().is_empty(), "Network should initialize with default clients");
         Ok(())
