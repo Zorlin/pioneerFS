@@ -1,4 +1,5 @@
 use crate::{StorageNode, Client, erc20::ERC20};
+use libp2p::futures::StreamExt;
 use tokio::sync::broadcast::Sender;
 use libp2p::{futures::StreamExt,
     core::{transport::MemoryTransport, upgrade},
