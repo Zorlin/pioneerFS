@@ -7,6 +7,9 @@ pub use network::{Network, DebugLevel};
 pub use storage_node::StorageNode;
 pub use client::Client;
 
+#[cfg(test)]
+mod end_to_end_tests;
+
 
 #[cfg(test)]
 mod tests {
