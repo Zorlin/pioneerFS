@@ -55,7 +55,6 @@ impl App {
         adjust_pricing(&mut network.lock().unwrap());
         app
     }
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
