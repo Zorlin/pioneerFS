@@ -17,7 +17,13 @@ mod advanced_network_tests {
 
     #[test]
     fn test_file_replication() {
+        println!("Starting test_file_replication");
+        println!("Starting test_storage_node_failure");
+        println!("Starting test_dynamic_replication");
         let mut network = setup();
+        println!("Network setup complete");
+        println!("Network setup complete");
+        println!("Network setup complete");
         let client_id = network.list_clients()[0];
         let filename = "test_file.txt";
         let data = vec![1, 2, 3, 4, 5]; // 5 bytes of data
