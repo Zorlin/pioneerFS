@@ -70,7 +70,7 @@ impl Network {
         }
 
         self.debug_log(&format!("Successfully increased replication factor for file: {} to {}", filename, new_replication_factor));
-        Ok(())
+        Ok(stored_nodes)
     }
 }
 
@@ -228,7 +228,7 @@ impl Network {
         self.token.balance_of(peer_id)
     }
 
-    pub fn upload_file(&mut self, client_id: &PeerId, filename: String, data: Vec<u8>, replication_factor: usize) -> Result<(), String> {
+    pub fn upload_file(&mut self, client_id: &PeerId, filename: String, data: Vec<u8>, replication_factor: usize) -> Result<Vec<PeerId>, String> {
         self.debug_log(&format!("Uploading file: {} for client: {} with replication factor: {}", filename, client_id, replication_factor));
 
         // Select storage nodes
