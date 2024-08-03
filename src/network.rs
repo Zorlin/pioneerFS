@@ -3,12 +3,14 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     identity,
     kad::{store::MemoryStore, Kademlia, KademliaConfig, KademliaEvent},
-    tcp::TcpTransport,
+    tcp::TcpConfig,
     noise::{NoiseConfig, X25519Spec, Keypair, NoiseKeypair},
     yamux::YamuxConfig,
-    swarm::{Swarm, SwarmEvent, SwarmBuilder},
+    swarm::{Swarm, SwarmEvent},
     core::upgrade,
     PeerId,
+    Transport,
+    SwarmBuilder,
 };
 use std::error::Error;
 use std::collections::{HashMap, VecDeque};
@@ -191,13 +193,13 @@ impl Network {
         let transport = TcpConfig::new()
             .nodelay(true)
             .upgrade(upgrade::Version::V1)
-            .authenticate(NoiseConfig::xx(Keypair::<X25519Spec>::new().into_authentic(&local_key)?).unwrap())
+            .authenticate(NoiseConfig::xx(Keypair::<X25519Spec>::new().into_authentic(&local_key)?))
             .multiplex(YamuxConfig::default())
             .boxed();
 
         let store = MemoryStore::new(local_peer_id);
         let kademlia = Kademlia::with_config(local_peer_id, store, KademliaConfig::default());
-        let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id)
+        let swarm = SwarmBuilder::with_new_identity(transport, kademlia, local_peer_id)
             .executor(Box::new(|fut| {
                 tokio::spawn(fut);
             }))
