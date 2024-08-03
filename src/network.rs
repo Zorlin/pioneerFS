@@ -37,8 +37,8 @@ impl Network {
         }
     }
 
-    pub fn add_storage_node(&mut self, peer_id: PeerId) {
-        self.storage_nodes.insert(peer_id, StorageNode::new(peer_id));
+    pub fn add_storage_node(&mut self, peer_id: PeerId, price_per_gb: u64) {
+        self.storage_nodes.insert(peer_id, StorageNode::new(peer_id, price_per_gb));
     }
 
     pub fn add_client(&mut self, peer_id: PeerId) {
@@ -150,7 +150,7 @@ impl Network {
     }
 
     pub fn accept_storage_offer(&mut self, client_id: &PeerId, offer_index: usize, file_size: usize) -> Result<(), &'static str> {
-        let offer = self.marketplace.get(offer_index).ok_or("Offer not found")?;
+        let offer = self.marketplace.get(offer_index).cloned().ok_or("Offer not found")?;
         let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
         let storage_node = self.storage_nodes.get_mut(&offer.storage_node_id).ok_or("Storage node not found")?;
 
@@ -164,7 +164,7 @@ impl Network {
         }
 
         storage_node.add_balance(price);
-        storage_node.reserve_space(file_size);
+        storage_node.reserve_space(file_size)?;
 
         // Remove the offer and add a new one with updated available space
         self.marketplace.remove(offer_index);

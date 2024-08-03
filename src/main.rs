@@ -222,9 +222,14 @@ fn execute_command(app: &mut App) {
             app.messages.push(format!("Added client with PeerId: {}", peer_id));
         }
         "add_sp" => {
+            if parts.len() != 2 {
+                app.messages.push("Usage: add_sp <price_per_gb>".to_string());
+                return;
+            }
             let peer_id = PeerId::random();
-            app.network.add_storage_node(peer_id);
-            app.messages.push(format!("Added storage provider (SP) with PeerId: {}", peer_id));
+            let price_per_gb = parts[1].parse::<u64>().unwrap_or(0);
+            app.network.add_storage_node(peer_id, price_per_gb);
+            app.messages.push(format!("Added storage provider (SP) with PeerId: {} and price per GB: {}", peer_id, price_per_gb));
         }
         "list_clients" => {
             let clients = app.network.list_clients();
