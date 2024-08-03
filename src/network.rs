@@ -174,6 +174,20 @@ impl Network {
         }
     }
 
+    pub fn get_network_status(&self) -> NetworkStatus {
+        NetworkStatus {
+            storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, StorageNodeStatus {
+                available_space: node.available_space(),
+                stored_files: node.stored_files().keys().cloned().collect(),
+            })).collect(),
+            clients: self.clients.iter().map(|(id, client)| (*id, ClientStatus {
+                files: client.list_files().clone(),
+            })).collect(),
+            deals: self.deals.clone(),
+            marketplace: self.marketplace.clone(),
+        }
+    }
+
     pub fn get_file_locations(&self, client_id: &PeerId, filename: &str) -> Option<&Vec<PeerId>> {
         self.clients.get(client_id)?.get_file_locations(filename)
     }
