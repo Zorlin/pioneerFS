@@ -162,7 +162,8 @@ impl Deal {
             filename,
             start_time: Some(Instant::now()),
             duration,
-        }
+        };
+        status
     }
 
     pub fn start_time(&self) -> Instant {
