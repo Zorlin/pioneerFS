@@ -2,8 +2,30 @@ use crate::{StorageNode, Client};
 use libp2p::PeerId;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
+use serde::{Serialize, Deserialize};
 
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct NetworkStatus {
+    pub storage_nodes: HashMap<PeerId, StorageNodeStatus>,
+    pub clients: HashMap<PeerId, ClientStatus>,
+    pub deals: Vec<Deal>,
+    pub marketplace: VecDeque<StorageOffer>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct StorageNodeStatus {
+    pub available_space: usize,
+    pub stored_files: Vec<String>,
+    pub balance: u64,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct ClientStatus {
+    pub balance: u64,
+    pub files: HashMap<String, Vec<PeerId>>,
+}
 
 pub struct Network {
     storage_nodes: HashMap<PeerId, StorageNode>,
@@ -12,7 +34,6 @@ pub struct Network {
     marketplace: VecDeque<StorageOffer>,
 }
 
-#[derive(Clone)]
 #[derive(Clone)]
 pub struct StorageOffer {
     storage_node_id: PeerId,
@@ -36,6 +57,15 @@ impl Network {
             clients: HashMap::new(),
             deals: Vec::new(),
             marketplace: VecDeque::new(),
+        }
+    }
+
+    pub fn get_network_status(&self) -> NetworkStatus {
+        NetworkStatus {
+            storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, node.get_status())).collect(),
+            clients: self.clients.iter().map(|(id, client)| (*id, client.get_status())).collect(),
+            deals: self.deals.clone(),
+            marketplace: self.marketplace.clone(),
         }
     }
 
@@ -63,7 +93,7 @@ impl Network {
         &self.clients
     }
 
-    pub fn upload_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), &'static str> {
+    pub fn upload_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: String, data: Vec<u8>, replication: usize) -> Result<(), &'static str> {
         let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
         let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or("Storage node not found")?;
 
@@ -82,7 +112,33 @@ impl Network {
             duration: DEAL_DURATION,
         });
 
+        // Chain upload to other storage nodes
+        self.chain_upload(storage_node_id, &filename, &data, replication - 1)?;
+
         Ok(())
+    }
+
+    fn chain_upload(&mut self, source_node_id: &PeerId, filename: &str, data: &Vec<u8>, remaining_replications: usize) -> Result<(), &'static str> {
+        if remaining_replications == 0 {
+            return Ok(());
+        }
+
+        let available_nodes: Vec<PeerId> = self.storage_nodes.keys()
+            .filter(|&id| id != source_node_id)
+            .cloned()
+            .collect();
+
+        if available_nodes.is_empty() {
+            return Err("No available storage nodes for replication");
+        }
+
+        let target_node_id = available_nodes[rand::random::<usize>() % available_nodes.len()];
+        let target_node = self.storage_nodes.get_mut(&target_node_id).unwrap();
+
+        target_node.store_file(filename.to_string(), data.clone())?;
+
+        // Recursively continue the chain upload
+        self.chain_upload(&target_node_id, filename, data, remaining_replications - 1)
     }
 
     pub fn download_file(&self, _client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<Vec<u8>, &'static str> {
