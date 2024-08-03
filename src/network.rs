@@ -196,7 +196,7 @@ impl Network {
             .boxed();
 
         let store = MemoryStore::new(local_peer_id);
-        let kademlia = Kademlia::with_config(local_peer_id, store, KademliaConfig::default());
+        let kademlia = Kademlia::new(local_peer_id, store);
         let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id).build();
 
         let mut network = Network {
@@ -225,7 +225,7 @@ impl Network {
                 Some(SwarmEvent::NewListenAddr { address, .. }) => {
                     println!("Listening on {:?}", address);
                 }
-                Some(SwarmEvent::Behaviour(KademliaEvent::OutboundQueryProgressed { result, .. })) => {
+                Some(SwarmEvent::Behaviour(KademliaEvent::OutboundQueryCompleted { result, .. })) => {
                     println!("Query completed: {:?}", result);
                 }
                 _ => {}
