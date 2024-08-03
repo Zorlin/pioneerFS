@@ -13,7 +13,6 @@ use ratatui::{
 };
 use std::{env, error::Error, io, time::{Duration, Instant}};
 use pioneerfs::{Network, DebugLevel};
-use crate::run_advanced_network_tests;
 use std::sync::{Arc, Mutex};
 use tokio::task;
 
@@ -107,7 +106,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             })
         };
 
-        let _: Result<(), Box<dyn Error + Send + Sync>> = tokio::try_join!(webui_handle, terminal_handle, async {
+        let _: Result<(), Box<dyn Error + Send + Sync>> = tokio::try_join!(webui_handle, terminal_handle, async move {
             loop {
                 // Periodically update the network status in the WebUI
                 {
