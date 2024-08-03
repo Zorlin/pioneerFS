@@ -8,7 +8,7 @@ use rand::seq::SliceRandom;
 
 const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 const REPLICATION_FACTOR: usize = 3; // Default replication factor for the TESTNET
-const CHUNK_SIZE: usize = 1024 * 1024; // 1MB chunk size for erasure coding
+pub const CHUNK_SIZE: usize = 1024 * 1024; // 1MB chunk size for erasure coding
 
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
@@ -195,6 +195,9 @@ impl Network {
         self.token.transfer(client_id, &PeerId::random(), storage_cost);
 
         let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), REPLICATION_FACTOR).cloned().collect();
+
+        // Erasure code the file
+        let encoded_chunks = self.erasure_code_file(&data);
 
         // Calculate total cost
         let total_size_gb = (encoded_chunks.iter().map(|chunk| chunk.len()).sum::<usize>() as f64 / (1024.0 * 1024.0 * 1024.0)).ceil() as u64;
