@@ -16,10 +16,6 @@ pub enum DebugLevel {
     High,
 }
 
-pub struct Network {
-    pub message_sender: Option<Sender<String>>,
-    // other fields...
-}
 
 impl Network {
     pub fn request_higher_replication(&mut self, client_id: &PeerId, filename: &str, new_replication_factor: usize) -> Result<(), String> {
