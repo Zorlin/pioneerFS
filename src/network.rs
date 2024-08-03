@@ -197,8 +197,8 @@ impl Network {
         let kademlia = kad::Behaviour::new(local_peer_id.clone(), store);
         let behaviour = NetworkBehaviourImpl { kademlia };
         let swarm = SwarmBuilder::with_existing_identity(local_key)
-            .with_tcp(Default::default(), noise::Config::new, yamux::Config::default)?
-            .with_behaviour(|_| behaviour)?
+            .with_transport(transport)
+            .with_behaviour(|_| behaviour)
             .build();
 
         let network = Network {
