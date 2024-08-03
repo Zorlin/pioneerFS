@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let mut network = Network::new();
         network.set_debug_level(DebugLevel::Low);
         let (tx, _rx) = broadcast::channel(100);
-        run_replication_tests(&mut network, tx.clone());
+        let _ = run_replication_tests(&mut network, tx.clone());
     } else if args.contains(&"--advanced-tests".to_string()) {
         // Run advanced network tests
         let mut network = Network::new();
@@ -142,7 +142,7 @@ fn adjust_pricing(_network: &mut Network) {
 }
 
 fn run_replication_tests(_network: &mut Network, _tx: broadcast::Sender<String>) -> Result<(), Box<dyn Error>> {
-    let rng = rand::thread_rng();
+    let _rng = rand::thread_rng();
     // Add the missing closing brace for the function
     Ok(())
 }
