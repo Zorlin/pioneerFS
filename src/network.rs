@@ -195,7 +195,10 @@ impl Network {
 
         // Update client's file record
         let client = self.clients.get_mut(client_id).ok_or_else(|| "Client not found".to_string())?;
-        client.add_file(filename, selected_nodes);
+        client.add_file(filename.clone(), selected_nodes.clone());
+
+        // Initiate replication process
+        self.replicate_file(client_id, &filename, REPLICATION_FACTOR - 1)?;
 
         Ok(())
     }
