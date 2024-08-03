@@ -22,7 +22,7 @@ mod tests {
     fn test_add_storage_node() {
         let mut network = Network::new();
         let peer_id = PeerId::random();
-        network.add_storage_node(peer_id);
+        network.add_storage_node(peer_id, 10); // Add a default price of 10
         assert_eq!(network.storage_nodes().len(), 1);
         assert!(network.storage_nodes().contains_key(&peer_id));
     }
@@ -42,7 +42,7 @@ mod tests {
         let client_id = PeerId::random();
         let storage_node_id = PeerId::random();
         network.add_client(client_id);
-        network.add_storage_node(storage_node_id);
+        network.add_storage_node(storage_node_id, 10); // Add a default price of 10
 
         let filename = "test.txt".to_string();
         let data = b"Hello, world!".to_vec();
@@ -72,8 +72,8 @@ mod tests {
         let storage_node_id1 = PeerId::random();
         let storage_node_id2 = PeerId::random();
         network.add_client(client_id);
-        network.add_storage_node(storage_node_id1);
-        network.add_storage_node(storage_node_id2);
+        network.add_storage_node(storage_node_id1, 10); // Add a default price of 10
+        network.add_storage_node(storage_node_id2, 10); // Add a default price of 10
 
         let filename = "replicated.txt".to_string();
         let data = b"Replicate me!".to_vec();

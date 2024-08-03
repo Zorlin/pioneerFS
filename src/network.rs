@@ -12,6 +12,7 @@ pub struct Network {
     marketplace: VecDeque<StorageOffer>,
 }
 
+#[derive(Clone)]
 pub struct StorageOffer {
     storage_node_id: PeerId,
     price_per_gb: u64,
