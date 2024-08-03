@@ -24,8 +24,8 @@ mod tests {
 
     #[test]
     fn test_add_storage_node() -> Result<(), Box<dyn std::error::Error>> {
-        Ok(())
         let mut network = Network::new()?;
+        Ok(())
         let initial_count = network.storage_nodes().len();
         let peer_id = PeerId::random();
         network.add_storage_node(peer_id, 10); // Add a default price of 10
@@ -35,8 +35,8 @@ mod tests {
 
     #[test]
     fn test_add_client() -> Result<(), Box<dyn std::error::Error>> {
-        Ok(())
         let mut network = Network::new()?;
+        Ok(())
         let initial_count = network.clients().len();
         let peer_id = PeerId::random();
         network.add_client(peer_id);
@@ -46,8 +46,8 @@ mod tests {
 
     #[test]
     fn test_file_upload_and_download() -> Result<(), Box<dyn std::error::Error>> {
-        Ok(())
         let mut network = Network::new()?;
+        Ok(())
         let client_id = PeerId::random();
         network.add_client(client_id);
         
@@ -87,8 +87,8 @@ mod tests {
 
     #[test]
     fn test_file_replication() -> Result<(), Box<dyn std::error::Error>> {
-        Ok(())
         let mut network = Network::new()?;
+        Ok(())
         let client_id = PeerId::random();
         network.add_client(client_id);
         
