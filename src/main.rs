@@ -13,6 +13,10 @@ use ratatui::{
 };
 use std::{env, error::Error, io, time::{Duration, Instant}};
 use pioneerfs::{Network, DebugLevel};
+use tokio::task;
+use warp::Filter;
+
+mod webui;
 use libp2p::PeerId;
 use rand::Rng;
 
@@ -45,7 +49,8 @@ impl App {
     }
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
     
     if args.contains(&"--test".to_string()) {
@@ -55,33 +60,43 @@ fn main() -> Result<(), Box<dyn Error>> {
         run_replication_tests(&mut network);
     } else {
         // Run in normal mode
-        enable_raw_mode()?;
-        let mut stdout = io::stdout();
-        execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-        let backend = CrosstermBackend::new(stdout);
-        let mut terminal = Terminal::new(backend)?;
+        let webui_handle = task::spawn(async {
+            webui::start_webui().await;
+        });
 
-        let debug_level = if args.contains(&"--debug".to_string()) {
-            DebugLevel::High
-        } else {
-            DebugLevel::None
-        };
+        let terminal_handle = task::spawn_blocking(|| -> Result<(), Box<dyn Error>> {
+            enable_raw_mode()?;
+            let mut stdout = io::stdout();
+            execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+            let backend = CrosstermBackend::new(stdout);
+            let mut terminal = Terminal::new(backend)?;
 
-        let tick_rate = Duration::from_millis(250);
-        let app = App::new(debug_level);
-        let res = run_app(&mut terminal, app, tick_rate);
+            let debug_level = if args.contains(&"--debug".to_string()) {
+                DebugLevel::High
+            } else {
+                DebugLevel::None
+            };
 
-        disable_raw_mode()?;
-        execute!(
-            terminal.backend_mut(),
-            LeaveAlternateScreen,
-            DisableMouseCapture
-        )?;
-        terminal.show_cursor()?;
+            let tick_rate = Duration::from_millis(250);
+            let app = App::new(debug_level);
+            let res = run_app(&mut terminal, app, tick_rate);
 
-        if let Err(err) = res {
-            println!("{:?}", err)
-        }
+            disable_raw_mode()?;
+            execute!(
+                terminal.backend_mut(),
+                LeaveAlternateScreen,
+                DisableMouseCapture
+            )?;
+            terminal.show_cursor()?;
+
+            if let Err(err) = res {
+                println!("{:?}", err)
+            }
+
+            Ok(())
+        });
+
+        let _ = tokio::try_join!(webui_handle, terminal_handle)?;
     }
 
     Ok(())
