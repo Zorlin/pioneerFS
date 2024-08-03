@@ -133,7 +133,46 @@ const INDEX_HTML: &str = r#"
         d3.json("/status").then(data => {
             if (!data || !data.clients || !data.storage_nodes) {
                 console.error("Invalid data received from /status endpoint", data);
-                document.getElementById("test-result").innerText = "No graph, I can't draw this";
+                // Draw an empty canvas
+                const graph = {
+                    nodes: [],
+                    links: []
+                };
+
+                const link = svg.append("g")
+                    .attr("class", "links")
+                    .selectAll("line")
+                    .data(graph.links)
+                    .enter().append("line")
+                    .attr("class", "link");
+
+                const node = svg.append("g")
+                    .attr("class", "nodes")
+                    .selectAll("circle")
+                    .data(graph.nodes)
+                    .enter().append("circle")
+                    .attr("class", "node")
+                    .attr("r", 5)
+                    .attr("fill", "none");
+
+                simulation
+                    .nodes(graph.nodes)
+                    .on("tick", ticked);
+
+                simulation.force("link")
+                    .links(graph.links);
+
+                function ticked() {
+                    link
+                        .attr("x1", d => d.source.x)
+                        .attr("y1", d => d.source.y)
+                        .attr("x2", d => d.target.x)
+                        .attr("y2", d => d.target.y);
+
+                    node
+                        .attr("cx", d => d.x)
+                        .attr("cy", d => d.y);
+                }
                 return;
             }
             const graph = {
