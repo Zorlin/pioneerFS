@@ -57,7 +57,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // Run in test mode
         let mut network = Network::new();
         network.set_debug_level(DebugLevel::Low);
-        let (tx, _rx) = broadcast::channel(100);
+        let (tx, rx) = broadcast::channel(100);
         run_replication_tests(&mut network, tx.clone());
     } else if args.contains(&"--advanced-tests".to_string()) {
         // Run advanced network tests
@@ -136,7 +136,7 @@ fn run_app<B: ratatui::backend::Backend>(
     tick_rate: Duration,
 ) -> io::Result<()> {
     let mut last_tick = Instant::now();
-    let mut rx = app.network.lock().unwrap().subscribe();
+    let mut rx = rx;
     loop {
         terminal.draw(|f| ui(f, &mut app))?;
 
