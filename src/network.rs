@@ -215,10 +215,11 @@ impl Network {
 
     pub async fn run(&mut self) -> Result<(), Box<dyn Error>> {
         while let Some(event) = self.swarm.next().await {
-                Some(SwarmEvent::NewListenAddr { address, .. }) => {
+            match event {
+                SwarmEvent::NewListenAddr { address, .. } => {
                     println!("Listening on {:?}", address);
                 }
-                Some(SwarmEvent::Behaviour(NetworkBehaviourEvent::Kademlia(event))) => match event {
+                SwarmEvent::Behaviour(NetworkBehaviourEvent::Kademlia(event)) => match event {
                     KademliaEvent::OutboundQueryCompleted { result, .. } => {
                         println!("Query completed: {:?}", result);
                     }
