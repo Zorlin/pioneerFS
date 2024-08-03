@@ -3,8 +3,9 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
-    swarm::{Swarm, SwarmEvent, SwarmBuilder},
-    kad::{self, store::MemoryStore, KademliaEvent},
+    swarm::{Swarm, Event},
+    SwarmBuilder,
+    kad::{self, store::MemoryStore, Event},
     PeerId, Transport,
 };
 use std::error::Error;
@@ -216,11 +217,11 @@ impl Network {
     pub async fn run(&mut self) -> Result<(), Box<dyn Error>> {
         while let Some(event) = self.swarm.next().await {
             match event {
-                SwarmEvent::NewListenAddr { address, .. } => {
+                swarm::Event::NewListenAddr { address, .. } => {
                     println!("Listening on {:?}", address);
                 }
-                SwarmEvent::Behaviour(event) => match event {
-                    KademliaEvent::OutboundQueryCompleted { result, .. } => {
+                swarm::Event::Behaviour(event) => match event {
+                    kad::Event::OutboundQueryCompleted { result, .. } => {
                         println!("Query completed: {:?}", result);
                     }
                     _ => println!("Unhandled Kademlia event: {:?}", event),
