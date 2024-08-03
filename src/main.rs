@@ -27,7 +27,6 @@ struct App {
     messages: Vec<String>,
     messages_state: ListState,
     scroll_offset: usize,
-    total_messages: usize,
 }
 
 impl App {
@@ -41,7 +40,6 @@ impl App {
             messages: Vec::new(),
             messages_state: ListState::default(),
             scroll_offset: 0,
-            total_messages: 0,
         }
     }
 }
@@ -207,9 +205,10 @@ fn ui(f: &mut Frame, app: &mut App) {
     }
 
     let messages_height = chunks[2].height as usize - 2; // Subtract 2 for the border
-    let max_scroll = app.total_messages.saturating_sub(messages_height);
-    let start_index = app.scroll_offset.min(max_scroll);
-    let end_index = (start_index + messages_height).min(app.total_messages);
+    let total_messages = app.messages.len();
+    let max_scroll = total_messages.saturating_sub(messages_height);
+    let start_index = (total_messages as i64 - messages_height as i64 - app.scroll_offset as i64).max(0) as usize;
+    let end_index = (start_index + messages_height).min(total_messages);
     
     let messages: Vec<ListItem> = app.messages.iter()
         .skip(start_index)
@@ -222,7 +221,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         .collect();
     
     let messages = List::new(messages)
-        .block(Block::default().borders(Borders::ALL).title(format!("Messages ({}-{}/{})", start_index + 1, end_index, app.total_messages)))
+        .block(Block::default().borders(Borders::ALL).title(format!("Messages ({}-{}/{})", start_index + 1, end_index, total_messages)))
         .highlight_style(Style::default().add_modifier(Modifier::BOLD))
         .highlight_symbol("> ");
     
@@ -232,7 +231,6 @@ fn ui(f: &mut Frame, app: &mut App) {
 fn execute_command(app: &mut App) {
     let command = app.input.trim();
     app.messages.push(format!("Executing: {}", command));
-    app.total_messages += 1;
 
     let parts: Vec<&str> = command.split_whitespace().collect();
     if parts.is_empty() {
