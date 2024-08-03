@@ -297,17 +297,18 @@ fn execute_command(app: &mut App) {
             }
         }
         "upload_file" => {
-            if parts.len() != 5 {
-                app.messages.push("Usage: upload_file <client_id> <sp_id> <filename> <content>".to_string());
+            if parts.len() != 6 {
+                app.messages.push("Usage: upload_file <client_id> <sp_id> <filename> <content> <replication_factor>".to_string());
                 return;
             }
             let client_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
             let _sp_id = PeerId::from_bytes(&hex::decode(parts[2]).unwrap()).unwrap();
             let filename = parts[3].to_string();
             let content = parts[4].as_bytes().to_vec();
+            let replication_factor = parts[5].parse::<usize>().unwrap_or(3); // Default to 3 if parsing fails
 
-            match app.network.upload_file(&client_id, filename, content) {
-                Ok(_) => app.messages.push("File uploaded successfully".to_string()),
+            match app.network.upload_file(&client_id, filename, content, replication_factor) {
+                Ok(_) => app.messages.push(format!("File uploaded successfully with replication factor {}", replication_factor)),
                 Err(e) => app.messages.push(format!("Failed to upload file: {}", e)),
             }
         }
