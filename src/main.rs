@@ -251,7 +251,7 @@ fn execute_command(app: &mut App) {
                 return;
             }
             let client_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
-            let sp_id = PeerId::from_bytes(&hex::decode(parts[2]).unwrap()).unwrap();
+            let _sp_id = PeerId::from_bytes(&hex::decode(parts[2]).unwrap()).unwrap();
             let filename = parts[3].to_string();
             let content = parts[4].as_bytes().to_vec();
 

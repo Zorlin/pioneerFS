@@ -35,17 +35,26 @@ pub struct ClientStatus {
 }
 
 pub struct Network {
-    storage_nodes: HashMap<PeerId, StorageNode>,
-    clients: HashMap<PeerId, Client>,
-    deals: Vec<Deal>,
-    marketplace: VecDeque<StorageOffer>,
+    pub storage_nodes: HashMap<PeerId, StorageNode>,
+    pub clients: HashMap<PeerId, Client>,
+    pub deals: Vec<Deal>,
+    pub marketplace: VecDeque<StorageOffer>,
     pub token: ERC20,
-    bids: HashMap<String, Vec<Bid>>,
+    pub bids: HashMap<String, Vec<Bid>>,
 }
 
 pub struct Bid {
-    storage_node_id: PeerId,
-    price_per_gb: u64,
+    pub storage_node_id: PeerId,
+    pub price_per_gb: u64,
+}
+
+impl Bid {
+    pub fn new(storage_node_id: PeerId, price_per_gb: u64) -> Self {
+        Self {
+            storage_node_id,
+            price_per_gb,
+        }
+    }
 }
 
 #[serde_as]
