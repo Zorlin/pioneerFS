@@ -15,7 +15,7 @@ pub struct ERC20 {
 
 impl ERC20 {
     pub fn new(name: String, symbol: String, initial_supply: u64) -> Self {
-        ERC20 {
+        let erc20 = ERC20 {
             name,
             symbol,
             total_supply: initial_supply,
@@ -24,6 +24,14 @@ impl ERC20 {
             debug: false,
             message_sender: None,
         }
+    }
+
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn get_symbol(&self) -> &str {
+        &self.symbol
     }
 
     pub fn set_debug(&mut self, debug: bool) {
