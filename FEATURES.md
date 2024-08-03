@@ -1,3 +1,6 @@
+Chain uploading:
+* It should be possible to upload a file to a single SP, while having that SP upload the data it's receiving to two other SPs, as it receives it. Which can then do the same to other SPs, up to the limit of the replication the client paid for.
+
 The Feed:
 * People can run a full node, which indexes the entire network and all transactions and history, then streams it into an append-only log to serve as a source of truth/data feed for the network. That append only log can have access to it bought and sold on Pioneer. It can be sold as a "pay per view" data source, where nodes can pay to download the latest version of it, for purposes like displaying data visualisations and querying. Clients should pay just *barely* above the pure cost of bandwidth (maybe 5 bps). In practice, the Pioneer Foundation will be the primary feed runner, but anyone can run their own and maybe even get paid by further third parties who validate them against each other - you can get paid for being a verifiable source of truth to validate other sources of truth.
 * Open source projects can request grants for free Feed access.

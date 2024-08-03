@@ -36,4 +36,13 @@ You should be able to run the system and see the following:
 * Clients requesting higher replication levels
 * Nodes bidding on the ability to store those files and clients setting the maximum price they are willing to pay for replications
 
+To address these requirements, we need to implement the following:
+
+1. Enhance the upload process to include replication
+2. Implement a method for clients to request higher replication levels
+3. Create a bidding system for storage nodes
+4. Allow clients to set maximum prices for replications
+
+Let's start by implementing these features:
+
 With the TUI/WebUI You can view the various nodes as a text list as if they were a list of long running tasks, or view them as a global map with virtual locations around the world.
