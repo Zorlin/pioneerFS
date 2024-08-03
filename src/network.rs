@@ -3,10 +3,11 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     noise, identity, yamux,
-    swarm::{Swarm, SwarmEvent, SwarmBuilder},
+    swarm::{Swarm, SwarmEvent},
     kad::{store::MemoryStore, Kademlia, KademliaEvent},
     PeerId, Transport,
 };
+use libp2p::swarm::SwarmBuilder;
 use std::error::Error;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
@@ -185,14 +186,10 @@ impl Network {
         let local_peer_id = PeerId::from(local_key.public());
         println!("Local peer id: {:?}", local_peer_id);
 
-        let noise_keys = noise::Keypair::<noise::X25519Spec>::new()
-            .into_authentic(&local_key)
-            .expect("Signing libp2p-noise static DH keypair failed.");
-
         let transport = MemoryTransport::default()
             .upgrade(upgrade::Version::V1)
-            .authenticate(noise::NoiseConfig::xx(noise_keys).into_authenticated())
-            .multiplex(yamux::YamuxConfig::default())
+            .authenticate(noise::NoiseAuthenticated::xx(&local_key).unwrap())
+            .multiplex(yamux::Config::default())
             .boxed();
 
         let store = MemoryStore::new(local_peer_id);

@@ -15,10 +15,11 @@ mod tests {
     use libp2p::PeerId;
 
     #[test]
-    fn test_network_creation() {
+    fn test_network_creation() -> Result<(), String> {
         let network = Network::new().map_err(|e| format!("Failed to create network: {}", e))?;
         assert!(!network.storage_nodes().is_empty(), "Network should initialize with default storage nodes");
         assert!(!network.clients().is_empty(), "Network should initialize with default clients");
+        Ok(())
     }
 
     #[test]
