@@ -185,10 +185,6 @@ impl Network {
             })).collect(),
             deals: self.deals.clone(),
             marketplace: self.marketplace.clone(),
-            storage_nodes: self.storage_nodes.iter().map(|(id, node)| (*id, StorageNodeStatus {
-                available_space: node.available_space(),
-                stored_files: node.stored_files().keys().cloned().collect(),
-            })).collect(),
         }
     }
 
