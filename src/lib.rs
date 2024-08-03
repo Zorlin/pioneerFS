@@ -49,6 +49,10 @@ mod tests {
         let filename = "test.txt".to_string();
         let data = b"Hello, world!".to_vec();
 
+        // Check initial balance
+        let initial_balance = network.get_balance(&client_id);
+        assert_eq!(initial_balance, 1_000_000, "Initial balance should be 1,000,000");
+
         // Upload file
         network.upload_file(&client_id, &storage_node_id, filename.clone(), data.clone())
             .unwrap_or_else(|e| panic!("Failed to upload file: {}", e));
@@ -59,7 +63,8 @@ mod tests {
 
         // Check that the client's balance is deducted
         let client_balance = network.get_balance(&client_id);
-        assert!(client_balance < 100000);
+        assert!(client_balance < 1_000_000, "Balance should be less than initial balance");
+        assert!(client_balance >= 999_990, "Balance should not be deducted by more than 10 tokens");
 
         // Remove file
         assert!(network.remove_file(&client_id, &storage_node_id, &filename).is_ok());
@@ -81,8 +86,13 @@ mod tests {
         let filename = "replicated.txt".to_string();
         let data = b"Replicate me!".to_vec();
 
+        // Check initial balance
+        let initial_balance = network.get_balance(&client_id);
+        assert_eq!(initial_balance, 1_000_000, "Initial balance should be 1,000,000");
+
         // Upload file to first storage node
-        assert!(network.upload_file(&client_id, &storage_node_id1, filename.clone(), data.clone()).is_ok());
+        network.upload_file(&client_id, &storage_node_id1, filename.clone(), data.clone())
+            .unwrap_or_else(|e| panic!("Failed to upload file: {}", e));
 
         // Replicate file to second storage node
         assert!(network.replicate_file(&storage_node_id1, &storage_node_id2, &filename).is_ok());
@@ -90,5 +100,10 @@ mod tests {
         // Download file from second storage node
         let downloaded_data = network.download_file(&client_id, &storage_node_id2, &filename).unwrap();
         assert_eq!(data, downloaded_data);
+
+        // Check that the client's balance is deducted
+        let client_balance = network.get_balance(&client_id);
+        assert!(client_balance < 1_000_000, "Balance should be less than initial balance");
+        assert!(client_balance >= 999_990, "Balance should not be deducted by more than 10 tokens");
     }
 }

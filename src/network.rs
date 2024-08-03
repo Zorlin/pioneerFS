@@ -111,7 +111,7 @@ impl Network {
     pub fn add_client(&mut self, peer_id: PeerId) {
         self.clients.insert(peer_id, Client::new(peer_id));
         // Initialize client with 1,000,000 tokens
-        self.token.transfer(&PeerId::random(), &peer_id, 1_000_000);
+        self.token.mint(&peer_id, 1_000_000);
     }
 
     pub fn list_clients(&self) -> Vec<PeerId> {
@@ -138,7 +138,7 @@ impl Network {
         let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or_else(|| "Storage node not found".to_string())?;
 
         // Calculate the cost of storage
-        let file_size_gb = (data.len() as f64 / (1024.0 * 1024.0 * 1024.0)).ceil() as u64;
+        let file_size_gb = ((data.len() as f64 / (1024.0 * 1024.0 * 1024.0)).ceil() as u64).max(1);
         let cost = file_size_gb * storage_node.price_per_gb();
 
         // Check if the client has enough balance and transfer tokens
