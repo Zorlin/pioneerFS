@@ -20,6 +20,11 @@ use std::{
 
 use ratatui::{
     backend::CrosstermBackend,
+    crossterm::{
+        event::{self, Event, KeyCode},
+        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+        ExecutableCommand,
+    },
     layout::{Constraint, Layout, Rect},
     style::{Color, Stylize},
     symbols::Marker,
@@ -28,11 +33,6 @@ use ratatui::{
         Block, Widget,
     },
     Frame, Terminal,
-};
-use crossterm::{
-    event::{self, Event, KeyCode},
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
 };
 
 fn main() -> io::Result<()> {
@@ -129,12 +129,9 @@ impl App {
     }
 
     fn ui(&self, frame: &mut Frame) {
-        let horizontal = Layout::default()
-            .direction(ratatui::layout::Direction::Horizontal)
-            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref());
-        let vertical = Layout::default()
-            .direction(ratatui::layout::Direction::Vertical)
-            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref());
+        let horizontal =
+            Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)]);
+        let vertical = Layout::vertical([Constraint::Percentage(50), Constraint::Percentage(50)]);
         let [map, right] = horizontal.areas(frame.size());
         let [pong, boxes] = vertical.areas(right);
 
@@ -145,7 +142,7 @@ impl App {
 
     fn map_canvas(&self) -> impl Widget + '_ {
         Canvas::default()
-            .block(Block::default().borders(ratatui::widgets::Borders::ALL).title("World"))
+            .block(Block::bordered().title("World"))
             .marker(self.marker)
             .paint(|ctx| {
                 ctx.draw(&Map {
@@ -160,7 +157,7 @@ impl App {
 
     fn pong_canvas(&self) -> impl Widget + '_ {
         Canvas::default()
-            .block(Block::default().borders(ratatui::widgets::Borders::ALL).title("Pong"))
+            .block(Block::bordered().title("Pong"))
             .marker(self.marker)
             .paint(|ctx| {
                 ctx.draw(&self.ball);
@@ -175,7 +172,7 @@ impl App {
         let bottom = 0.0;
         let top = f64::from(area.height).mul_add(2.0, -4.0);
         Canvas::default()
-            .block(Block::default().borders(ratatui::widgets::Borders::ALL).title("Rects"))
+            .block(Block::bordered().title("Rects"))
             .marker(self.marker)
             .x_bounds([left, right])
             .y_bounds([bottom, top])
@@ -210,12 +207,12 @@ impl App {
 
 fn init_terminal() -> io::Result<Terminal<CrosstermBackend<Stdout>>> {
     enable_raw_mode()?;
-    crossterm::execute!(stdout(), EnterAlternateScreen)?;
+    stdout().execute(EnterAlternateScreen)?;
     Terminal::new(CrosstermBackend::new(stdout()))
 }
 
 fn restore_terminal() -> io::Result<()> {
     disable_raw_mode()?;
-    crossterm::execute!(stdout(), LeaveAlternateScreen)?;
+    stdout().execute(LeaveAlternateScreen)?;
     Ok(())
 }
