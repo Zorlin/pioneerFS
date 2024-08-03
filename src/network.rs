@@ -34,13 +34,6 @@ impl Network {
             return Err(format!("New replication factor must be higher than current ({}).", current_storage_nodes.len()));
         };
 
-        // Initialize with at least one storage node and one client
-        let initial_client_id = PeerId::random();
-        let initial_storage_node_id = PeerId::random();
-        network.add_client(initial_client_id);
-        network.add_storage_node(initial_storage_node_id, 10); // Example price per GB
-
-        network
 
         let additional_replications = new_replication_factor - current_storage_nodes.len();
         let available_nodes: Vec<PeerId> = self.storage_nodes.keys()
@@ -50,7 +43,15 @@ impl Network {
 
         if available_nodes.len() < additional_replications {
             return Err(format!("Not enough additional storage nodes available. Required: {}, Available: {}", additional_replications, available_nodes.len()));
-        }
+        };
+
+        // Initialize with at least one storage node and one client
+        let initial_client_id = PeerId::random();
+        let initial_storage_node_id = PeerId::random();
+        network.add_client(initial_client_id);
+        network.add_storage_node(initial_storage_node_id, 10); // Example price per GB
+
+        network
 
         let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), additional_replications).cloned().collect();
 
