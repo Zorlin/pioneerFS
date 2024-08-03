@@ -38,14 +38,17 @@ struct App {
 impl App {
     fn new(debug_level: DebugLevel, network: Arc<Mutex<Network>>) -> App {
         network.lock().unwrap().set_debug_level(debug_level);
-        App {
+        let mut app = App {
             input: String::new(),
             input_mode: InputMode::Normal,
             network,
             messages: Vec::new(),
             messages_state: ListState::default(),
             scroll_offset: 0,
-        }
+        };
+
+        let sender = tx.clone();
+        app.network.lock().unwrap().message_sender = Some(sender);
     }
 }
 

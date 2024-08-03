@@ -1,4 +1,5 @@
 use crate::{StorageNode, Client, erc20::ERC20};
+use tokio::sync::broadcast::Sender;
 use libp2p::PeerId;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
@@ -13,7 +14,7 @@ pub enum DebugLevel {
     None,
     Low,
     High,
-}
+    pub message_sender: Option<Sender<String>>,
 
 impl DebugLevel {
     pub fn is_enabled(&self) -> bool {
@@ -28,7 +29,8 @@ impl Network {
         let current_storage_nodes = {
             let client = self.clients.get(client_id).ok_or_else(|| "Client not found".to_string())?;
             client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?.clone()
-        };
+            message_sender: None,
+        }
 
 
         if new_replication_factor <= current_storage_nodes.len() {
@@ -196,7 +198,9 @@ impl Network {
     }
 
     fn debug_log(&self, message: &str) {
-        if self.debug_level.is_enabled() {
+        if let Some(sender) = &self.message_sender {
+            let _ = sender.send(format!("[DEBUG] {}", message));
+        } else if self.debug_level.is_enabled() {
             println!("[DEBUG] {}", message);
         }
     }

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use libp2p::PeerId;
 use serde::{Serialize, Deserialize};
+use tokio::sync::broadcast::Sender;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ERC20 {
@@ -10,7 +11,7 @@ pub struct ERC20 {
     balances: HashMap<PeerId, u64>,
     allowances: HashMap<PeerId, HashMap<PeerId, u64>>,
     debug: bool,
-}
+    pub message_sender: Option<Sender<String>>,
 
 impl ERC20 {
     pub fn new(name: String, symbol: String, initial_supply: u64) -> Self {
@@ -21,6 +22,7 @@ impl ERC20 {
             balances: HashMap::new(),
             allowances: HashMap::new(),
             debug: false,
+            message_sender: None,
         }
     }
 
@@ -29,7 +31,9 @@ impl ERC20 {
     }
 
     fn debug_log(&self, message: &str) {
-        if self.debug {
+        if let Some(sender) = &self.message_sender {
+            let _ = sender.send(format!("[ERC20 DEBUG] {}", message));
+        } else if self.debug {
             println!("[ERC20 DEBUG] {}", message);
         }
     }
