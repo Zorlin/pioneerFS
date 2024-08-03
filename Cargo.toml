@@ -18,3 +18,16 @@ hex = "0.4"
 
 [dev-dependencies]
 tokio-test = "0.4"
+
+[[test]]
+name = "integration"
+path = "tests/integration_tests.rs"
+
+[lib]
+test = true
+doctest = true
+
+[[example]]
+name = "canvas"
+path = "examples/canvas.rs"
+test = false
