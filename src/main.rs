@@ -142,7 +142,7 @@ fn run_app<B: ratatui::backend::Backend>(
                 app.messages.push("Usage: increase_replication <client_id> <filename> <new_replication_factor>".to_string());
                 return;
             }
-            let client_id = PeerId::from_str(parts[1]).unwrap();
+            let client_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
             let filename = parts[2];
             let new_replication_factor = parts[3].parse::<usize>().unwrap_or(0);
             match app.network.request_higher_replication(&client_id, filename, new_replication_factor) {
