@@ -69,6 +69,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         let webui_handle = {
             let tx_clone = tx.clone();
+            let network_clone = Arc::clone(&network_arc);
             task::spawn(async move {
                 webui::start_webui(network_clone, tx_clone).await;
             })
