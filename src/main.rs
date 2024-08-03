@@ -26,6 +26,7 @@ struct App {
     network: Network,
     messages: Vec<String>,
     messages_state: ListState,
+    scroll_offset: usize,
 }
 
 impl App {
@@ -38,6 +39,7 @@ impl App {
             network,
             messages: Vec::new(),
             messages_state: ListState::default(),
+            scroll_offset: 0,
         }
     }
 }
@@ -102,22 +104,20 @@ fn run_app<B: ratatui::backend::Backend>(
                             return Ok(());
                         }
                         KeyCode::Up => {
-                            if let Some(selected) = app.messages_state.selected() {
-                                if selected > 0 {
-                                    app.messages_state.select(Some(selected - 1));
-                                }
-                            } else {
-                                app.messages_state.select(Some(0));
+                            if app.scroll_offset > 0 {
+                                app.scroll_offset -= 1;
                             }
                         }
                         KeyCode::Down => {
-                            if let Some(selected) = app.messages_state.selected() {
-                                if selected < app.messages.len().saturating_sub(1) {
-                                    app.messages_state.select(Some(selected + 1));
-                                }
-                            } else {
-                                app.messages_state.select(Some(0));
+                            if app.scroll_offset < app.messages.len().saturating_sub(1) {
+                                app.scroll_offset += 1;
                             }
+                        }
+                        KeyCode::PageUp => {
+                            app.scroll_offset = app.scroll_offset.saturating_sub(10);
+                        }
+                        KeyCode::PageDown => {
+                            app.scroll_offset = (app.scroll_offset + 10).min(app.messages.len().saturating_sub(1));
                         }
                         _ => {}
                     },
@@ -206,20 +206,25 @@ fn ui(f: &mut Frame, app: &mut App) {
         }
     }
 
-    let messages: Vec<ListItem> = app
-        .messages
+    let messages_height = chunks[2].height as usize - 2; // Subtract 2 for the border
+    let start_index = app.scroll_offset.min(app.messages.len().saturating_sub(messages_height));
+    let end_index = (start_index + messages_height).min(app.messages.len());
+    
+    let messages: Vec<ListItem> = app.messages[start_index..end_index]
         .iter()
         .enumerate()
         .map(|(i, m)| {
-            let content = vec![Line::from(Span::raw(format!("{}: {}", i, m)))];
+            let content = vec![Line::from(Span::raw(format!("{}: {}", start_index + i, m)))];
             ListItem::new(content)
         })
         .collect();
+    
     let messages = List::new(messages)
-        .block(Block::default().borders(Borders::ALL).title("Messages"))
+        .block(Block::default().borders(Borders::ALL).title(format!("Messages ({}/{})", start_index + 1, app.messages.len())))
         .highlight_style(Style::default().add_modifier(Modifier::BOLD))
         .highlight_symbol("> ");
-    f.render_stateful_widget(messages, chunks[2], &mut app.messages_state);
+    
+    f.render_widget(messages, chunks[2]);
 }
 
 fn execute_command(app: &mut App) {
