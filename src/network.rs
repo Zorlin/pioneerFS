@@ -214,8 +214,7 @@ impl Network {
     }
 
     pub async fn run(&mut self) -> Result<(), Box<dyn Error>> {
-        loop {
-            match self.swarm.next().await {
+        while let Some(event) = self.swarm.next().await {
                 Some(SwarmEvent::NewListenAddr { address, .. }) => {
                     println!("Listening on {:?}", address);
                 }
