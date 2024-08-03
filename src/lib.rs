@@ -26,29 +26,28 @@ mod tests {
     fn test_add_storage_node() -> Result<(), Box<dyn std::error::Error>> {
         let mut network = Network::new()?;
         let initial_count = network.storage_nodes().len();
-        Ok(())
         let peer_id = PeerId::random();
         network.add_storage_node(peer_id, 10); // Add a default price of 10
         assert_eq!(network.storage_nodes().len(), initial_count + 1);
         assert!(network.storage_nodes().contains_key(&peer_id));
+        Ok(())
     }
 
     #[test]
     fn test_add_client() -> Result<(), Box<dyn std::error::Error>> {
         let mut network = Network::new()?;
         let initial_count = network.clients().len();
-        Ok(())
         let peer_id = PeerId::random();
         network.add_client(peer_id);
         assert_eq!(network.clients().len(), initial_count + 1);
         assert!(network.clients().contains_key(&peer_id));
+        Ok(())
     }
 
     #[test]
     fn test_file_upload_and_download() -> Result<(), Box<dyn std::error::Error>> {
         let mut network = Network::new()?;
         let client_id = PeerId::random();
-        Ok(())
         network.add_client(client_id);
         
         // Add multiple storage nodes to ensure enough are available
@@ -56,6 +55,7 @@ mod tests {
             let storage_node_id = PeerId::random();
             network.add_storage_node(storage_node_id, 10); // Add a default price of 10
         }
+        Ok(())
 
         let filename = "test.txt".to_string();
         let data = b"Hello, world!".to_vec();
@@ -89,7 +89,6 @@ mod tests {
     fn test_file_replication() -> Result<(), Box<dyn std::error::Error>> {
         let mut network = Network::new()?;
         let client_id = PeerId::random();
-        Ok(())
         network.add_client(client_id);
         
         // Add multiple storage nodes to ensure enough are available for replication
@@ -97,6 +96,7 @@ mod tests {
             let storage_node_id = PeerId::random();
             network.add_storage_node(storage_node_id, 10); // Add a default price of 10
         }
+        Ok(())
 
         let filename = "replicated.txt".to_string();
         let data = b"Replicate me!".to_vec();
