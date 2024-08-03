@@ -1,4 +1,4 @@
-use crate::{StorageNode, Client};
+use crate::{StorageNode, Client, erc20::ERC20};
 use libp2p::PeerId;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
@@ -39,6 +39,7 @@ pub struct Network {
     clients: HashMap<PeerId, Client>,
     deals: Vec<Deal>,
     marketplace: VecDeque<StorageOffer>,
+    token: ERC20,
 }
 
 #[serde_as]
@@ -87,6 +88,7 @@ impl Network {
             clients: HashMap::new(),
             deals: Vec::new(),
             marketplace: VecDeque::new(),
+            token: ERC20::new("PioDollar".to_string(), "PIO".to_string(), 1_000_000_000), // 1 billion initial supply
         }
     }
 
@@ -131,31 +133,24 @@ impl Network {
     }
 
     pub fn upload_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), &'static str> {
-        let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
         let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or("Storage node not found")?;
 
         // Calculate the cost of storage
         let file_size_gb = (data.len() as f64 / (1024.0 * 1024.0 * 1024.0)).ceil() as u64;
         let cost = file_size_gb * storage_node.price_per_gb();
 
-        // Check if the client has enough balance
-        if client.balance() < cost {
+        // Check if the client has enough balance and transfer tokens
+        if !self.token.transfer(client_id, storage_node_id, cost) {
             return Err("Insufficient balance to upload file");
         }
 
-        // Deduct the cost from the client's balance
-        client.subtract_balance(cost);
-
-        // Add the cost to the storage node's balance
-        storage_node.add_balance(cost);
-
         if let Err(e) = storage_node.store_file(filename.clone(), data.clone()) {
             // If storing fails, refund the client
-            client.add_balance(cost);
-            storage_node.subtract_balance(cost);
+            self.token.transfer(storage_node_id, client_id, cost);
             return Err(e);
         }
 
+        let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
         client.add_file(filename.clone(), *storage_node_id);
 
         // Create a new deal

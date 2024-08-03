@@ -11,7 +11,6 @@ const MAX_STORAGE: usize = 1_000_000_000; // 1GB max storage
 pub struct StorageNode {
     #[serde_as(as = "DisplayFromStr")]
     peer_id: PeerId,
-    balance: u64,
     stored_files: HashMap<String, Vec<u8>>,
     available_space: usize,
     reputation: u64,
@@ -22,7 +21,6 @@ impl StorageNode {
     pub fn new(peer_id: PeerId, price_per_gb: u64) -> Self {
         StorageNode {
             peer_id,
-            balance: 0,
             stored_files: HashMap::new(),
             available_space: MAX_STORAGE,
             reputation: 100, // Start with a base reputation
@@ -48,23 +46,6 @@ impl StorageNode {
 
     pub fn peer_id(&self) -> &PeerId {
         &self.peer_id
-    }
-
-    pub fn balance(&self) -> u64 {
-        self.balance
-    }
-
-    pub fn add_balance(&mut self, amount: u64) {
-        self.balance += amount;
-    }
-
-    pub fn subtract_balance(&mut self, amount: u64) -> bool {
-        if self.balance >= amount {
-            self.balance -= amount;
-            true
-        } else {
-            false
-        }
     }
 
     pub fn store_file(&mut self, filename: String, data: Vec<u8>) -> Result<(), &'static str> {
