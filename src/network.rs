@@ -3,7 +3,7 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
-    swarm::{Swarm, SwarmEvent, NetworkBehaviour, derive::NetworkBehaviour},
+    swarm::{Swarm, SwarmEvent, NetworkBehaviour},
     kad::{self, store::MemoryStore},
     PeerId, Transport,
 };
@@ -188,14 +188,14 @@ impl Network {
 
         let transport = MemoryTransport::default()
             .upgrade(upgrade::Version::V1)
-            .authenticate(noise::Config::xx(local_key).into_authenticated())
+            .authenticate(noise::Config::new(&local_key).expect("Failed to create noise config").into_authenticated())
             .multiplex(yamux::Config::default())
             .boxed();
 
         let store = MemoryStore::new(local_peer_id.clone());
         let kademlia = kad::Behaviour::new(local_peer_id.clone(), store);
         let behaviour = NetworkBehaviourImpl { kademlia };
-        let swarm = Swarm::new(transport, behaviour, local_peer_id);
+        let swarm = Swarm::new(transport, behaviour, local_peer_id, libp2p::swarm::SwarmBuilder::default());
 
         let network = Network {
             message_sender: None,
@@ -215,6 +215,20 @@ impl Network {
 
     pub async fn run(&mut self) -> Result<(), Box<dyn Error>> {
         while let Some(event) = self.swarm.next().await {
+            match event {
+                SwarmEvent::NewListenAddr { address, .. } => {
+                    println!("Listening on {:?}", address);
+                }
+                SwarmEvent::Behaviour(event) => match event {
+                    kad::KademliaEvent::OutboundQueryCompleted { result, .. } => {
+                        println!("Query completed: {:?}", result);
+                    }
+                    _ => println!("Unhandled Kademlia event: {:?}", event),
+                }
+                _ => {}
+            }
+        }
+        Ok(())
             match event {
                 SwarmEvent::NewListenAddr { address, .. } => {
                     println!("Listening on {:?}", address);
@@ -485,5 +499,5 @@ impl Network {
 }
 #[derive(NetworkBehaviour)]
 struct NetworkBehaviourImpl {
-    kademlia: kad::Kademlia<kad::store::MemoryStore>,
+    kademlia: kad::Behaviour<kad::store::MemoryStore>,
 }
