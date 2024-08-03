@@ -16,7 +16,7 @@ mod tests {
 
     #[test]
     fn test_network_creation() -> Result<(), String> {
-        let network = Network::new().expect("Failed to create network");
+        let network = Network::new()?;
         assert!(!network.storage_nodes().is_empty(), "Network should initialize with default storage nodes");
         assert!(!network.clients().is_empty(), "Network should initialize with default clients");
         Ok(())
@@ -24,7 +24,7 @@ mod tests {
 
     #[test]
     fn test_add_storage_node() {
-        let mut network = Network::new().expect("Failed to create network");
+        let mut network = Network::new()?;
         let initial_count = network.storage_nodes().len();
         let peer_id = PeerId::random();
         network.add_storage_node(peer_id, 10); // Add a default price of 10
@@ -34,7 +34,7 @@ mod tests {
 
     #[test]
     fn test_add_client() {
-        let mut network = Network::new().expect("Failed to create network");
+        let mut network = Network::new()?;
         let initial_count = network.clients().len();
         let peer_id = PeerId::random();
         network.add_client(peer_id);
@@ -44,7 +44,7 @@ mod tests {
 
     #[test]
     fn test_file_upload_and_download() {
-        let mut network = Network::new().expect("Failed to create network");
+        let mut network = Network::new()?;
         let client_id = PeerId::random();
         network.add_client(client_id);
         
@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn test_file_replication() {
-        let mut network = Network::new().expect("Failed to create network");
+        let mut network = Network::new()?;
         let client_id = PeerId::random();
         network.add_client(client_id);
         

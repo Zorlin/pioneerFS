@@ -3,7 +3,7 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
-    swarm::{Swarm, SwarmEvent, NetworkBehaviour},
+    swarm::{Swarm, SwarmEvent, NetworkBehaviour, derive::NetworkBehaviour},
     kad::{self, store::MemoryStore},
     PeerId, Transport,
 };
@@ -124,7 +124,7 @@ pub struct Network {
     pub bids: HashMap<String, Vec<Bid>>,
     pub debug_level: DebugLevel,
     pub swarm: Swarm<NetworkBehaviourImpl>,
-    pub kademlia: kad::Kademlia<kad::store::MemoryStore>,
+    pub kademlia: kad::Behaviour<kad::store::MemoryStore>,
 }
 
 pub struct Bid {
@@ -188,14 +188,14 @@ impl Network {
 
         let transport = MemoryTransport::default()
             .upgrade(upgrade::Version::V1)
-            .authenticate(noise::NoiseConfig::xx(local_key).into_authenticated())
-            .multiplex(yamux::YamuxConfig::default())
+            .authenticate(noise::Config::xx(local_key).into_authenticated())
+            .multiplex(yamux::Config::default())
             .boxed();
 
         let store = MemoryStore::new(local_peer_id.clone());
-        let kademlia = kad::Kademlia::new(local_peer_id.clone(), store);
+        let kademlia = kad::Behaviour::new(local_peer_id.clone(), store);
         let behaviour = NetworkBehaviourImpl { kademlia };
-        let swarm = Swarm::new(transport, behaviour, local_peer_id, libp2p::swarm::SwarmBuilder::default());
+        let swarm = Swarm::new(transport, behaviour, local_peer_id);
 
         let network = Network {
             message_sender: None,
@@ -215,6 +215,20 @@ impl Network {
 
     pub async fn run(&mut self) -> Result<(), Box<dyn Error>> {
         while let Some(event) = self.swarm.next().await {
+            match event {
+                SwarmEvent::NewListenAddr { address, .. } => {
+                    println!("Listening on {:?}", address);
+                }
+                SwarmEvent::Behaviour(event) => match event {
+                    kad::KademliaEvent::OutboundQueryCompleted { result, .. } => {
+                        println!("Query completed: {:?}", result);
+                    }
+                    _ => println!("Unhandled Kademlia event: {:?}", event),
+                }
+                _ => {}
+            }
+        }
+        Ok(())
             match event {
                 SwarmEvent::NewListenAddr { address, .. } => {
                     println!("Listening on {:?}", address);
