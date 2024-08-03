@@ -46,8 +46,23 @@ impl Network {
 
         let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), additional_replications).cloned().collect();
 
-        // Here we would normally retrieve the file data and replicate it to the new nodes
-        // For now, we'll just update the client's file locations
+        // Retrieve the file data from one of the existing storage nodes
+        let file_data = {
+            let existing_node_id = current_storage_nodes.first().ok_or_else(|| "No existing storage nodes".to_string())?;
+            self.storage_nodes.get(existing_node_id)
+                .ok_or_else(|| "Storage node not found".to_string())?
+                .get_file(filename)
+                .ok_or_else(|| "File not found on storage node".to_string())?
+                .clone()
+        };
+
+        // Replicate the file to the new nodes
+        for &node_id in &selected_nodes {
+            let storage_node = self.storage_nodes.get_mut(&node_id).ok_or_else(|| "Storage node not found".to_string())?;
+            storage_node.store_file(filename.to_string(), file_data.clone())?;
+        }
+
+        // Update the client's file locations
         if let Some(client) = self.clients.get_mut(client_id) {
             let mut updated_locations = current_storage_nodes;
             updated_locations.extend(selected_nodes);
