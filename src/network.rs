@@ -3,9 +3,9 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     identity,
     kad::store::MemoryStore,
-    tcp::TcpConfig,
-    noise::{NoiseConfig, X25519Spec, Keypair, AuthenticKeypair},
-    yamux::YamuxConfig,
+    tcp::Config as TcpConfig,
+    noise::{Config as NoiseConfig, X25519, Keypair, AuthenticKeypair},
+    yamux::Config as YamuxConfig,
     swarm::{Swarm, SwarmEvent},
     core::upgrade,
     PeerId,
