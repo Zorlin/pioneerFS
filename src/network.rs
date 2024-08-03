@@ -3,12 +3,12 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     identity,
     tcp::Config as TcpConfig,
-    noise::{Config as NoiseConfig, Keypair, X25519Spec as X25519},
+    noise::{Config as NoiseConfig, Keypair, X25519},
     yamux::Config as YamuxConfig,
     swarm::{Swarm, SwarmEvent},
     kad::{store::MemoryStore, Config, Event},
     PeerId,
-    swarm::SwarmBuilder,
+    SwarmBuilder,
 };
 use std::error::Error;
 use std::collections::{HashMap, VecDeque};
