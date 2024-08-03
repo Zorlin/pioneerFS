@@ -24,8 +24,3 @@ tokio-test = "0.4"
 [[test]]
 name = "integration"
 path = "tests/integration_tests.rs"
-
-[[example]]
-name = "canvas"
-path = "examples/canvas.rs"
-test = false
