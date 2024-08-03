@@ -341,21 +341,22 @@ impl Network {
         Ok(())
     }
 
-    pub fn replicate_file(&mut self, client_id: &PeerId, filename: &str, remaining_replications: usize) -> Result<(), &'static str> {
-        let client = self.clients.get(client_id).ok_or("Client not found")?;
-        let storage_nodes = client.get_file_locations(filename).ok_or("File not found")?;
+    pub fn replicate_file(&mut self, client_id: &PeerId, filename: &str, remaining_replications: usize) -> Result<(), String> {
+        let client = self.clients.get(client_id).ok_or("Client not found".to_string())?;
+        let storage_nodes = client.get_file_locations(filename).ok_or("File not found".to_string())?;
         
         if storage_nodes.is_empty() {
-            return Err("No storage nodes found for the file");
+            return Err("No storage nodes found for the file".to_string());
         }
 
         let source_node_id = storage_nodes[0];
         let file_data = {
-            let source_node = self.storage_nodes.get(&source_node_id).ok_or("Source storage node not found")?;
-            source_node.get_file(filename).ok_or("File not found on source node")?.clone()
+            let source_node = self.storage_nodes.get(&source_node_id).ok_or("Source storage node not found".to_string())?;
+            source_node.get_file(filename).ok_or("File not found on source node".to_string())?.clone()
         };
 
         self.chain_upload(&source_node_id, filename, &file_data, remaining_replications)
+            .map_err(|e| e.to_string())
     }
 
     pub fn add_storage_offer(&mut self, storage_node_id: PeerId, price_per_gb: u64, available_space: usize) {

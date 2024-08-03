@@ -68,7 +68,8 @@ mod tests {
         // Check that the client's balance is deducted
         let client_balance = network.get_balance(&client_id);
         assert!(client_balance < 1_000_000, "Balance should be less than initial balance");
-        assert!(client_balance >= 999_990, "Balance should not be deducted by more than 10 tokens");
+        let expected_deduction = (data.len() + CHUNK_SIZE - 1) / CHUNK_SIZE;
+        assert_eq!(initial_balance - client_balance, expected_deduction as u64, "Balance should be deducted by the correct amount");
 
         // Remove file
         assert!(network.remove_file(&client_id, &filename).is_ok());
