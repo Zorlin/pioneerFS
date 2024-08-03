@@ -12,6 +12,7 @@ pub struct ERC20 {
     allowances: HashMap<PeerId, HashMap<PeerId, u64>>,
     debug: bool,
     pub message_sender: Option<Sender<String>>,
+}
 
 impl ERC20 {
     pub fn new(name: String, symbol: String, initial_supply: u64) -> Self {
