@@ -28,7 +28,7 @@ impl Network {
         let current_storage_nodes = {
             let client = self.clients.get(client_id).ok_or_else(|| "Client not found".to_string())?;
             client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?.clone()
-        };
+        }
 
 
         if new_replication_factor <= current_storage_nodes.len() {
@@ -44,7 +44,7 @@ impl Network {
 
         if available_nodes.len() < additional_replications {
             return Err(format!("Not enough additional storage nodes available. Required: {}, Available: {}", additional_replications, available_nodes.len()));
-        };
+        }
 
 
         let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), additional_replications).cloned().collect();
