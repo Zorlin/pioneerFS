@@ -16,12 +16,20 @@ pub enum DebugLevel {
     High,
 }
 
+impl DebugLevel {
+    pub fn is_enabled(&self) -> bool {
+        matches!(self, DebugLevel::Low | DebugLevel::High)
+    }
+}
+
 impl Network {
     pub fn request_higher_replication(&mut self, client_id: &PeerId, filename: &str, new_replication_factor: usize) -> Result<(), String> {
         self.debug_log(&format!("Requesting higher replication for file: {} from client: {} to factor: {}", filename, client_id, new_replication_factor));
 
-        let client = self.clients.get(client_id).ok_or_else(|| "Client not found".to_string())?;
-        let current_storage_nodes = client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?;
+        let current_storage_nodes = {
+            let client = self.clients.get(client_id).ok_or_else(|| "Client not found".to_string())?;
+            client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?.clone()
+        };
 
         if new_replication_factor <= current_storage_nodes.len() {
             return Err(format!("New replication factor must be higher than current ({}).", current_storage_nodes.len()));
@@ -42,7 +50,7 @@ impl Network {
         // Here we would normally retrieve the file data and replicate it to the new nodes
         // For now, we'll just update the client's file locations
         if let Some(client) = self.clients.get_mut(client_id) {
-            let mut updated_locations = current_storage_nodes.clone();
+            let mut updated_locations = current_storage_nodes;
             updated_locations.extend(selected_nodes);
             client.add_file(filename.to_string(), updated_locations);
         }
