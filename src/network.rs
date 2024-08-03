@@ -30,13 +30,6 @@ impl Network {
             client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?.clone()
         };
 
-        // Initialize with at least one storage node and one client
-        let initial_client_id = PeerId::random();
-        let initial_storage_node_id = PeerId::random();
-        network.add_client(initial_client_id);
-        network.add_storage_node(initial_storage_node_id, 10); // Example price per GB
-
-        network
 
         if new_replication_factor <= current_storage_nodes.len() {
             return Err(format!("New replication factor must be higher than current ({}).", current_storage_nodes.len()));
@@ -167,7 +160,7 @@ impl Deal {
             filename,
             start_time: Some(Instant::now()),
             duration,
-        }
+        };
     }
 
     pub fn start_time(&self) -> Instant {
@@ -185,7 +178,15 @@ impl Network {
             token: ERC20::new("PioDollar".to_string(), "PIO".to_string(), 1_000_000_000), // 1 billion initial supply
             bids: HashMap::new(),
             debug_level: DebugLevel::None,
-        }
+        };
+
+        // Initialize with at least one storage node and one client
+        let initial_client_id = PeerId::random();
+        let initial_storage_node_id = PeerId::random();
+        network.add_client(initial_client_id);
+        network.add_storage_node(initial_storage_node_id, 10); // Example price per GB
+
+        network
     }
 
     pub fn get_network_status(&self) -> NetworkStatus {
