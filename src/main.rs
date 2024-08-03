@@ -115,6 +115,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 }
                 tokio::time::sleep(Duration::from_secs(5)).await;
             }
+        } as Result<_, Box<dyn Error + Send + Sync>>)?;
+            loop {
+                // Periodically update the network status in the WebUI
+                {
+                    let network = network_arc.lock().unwrap();
+                    run_advanced_network_tests(&network);
+                }
+                tokio::time::sleep(Duration::from_secs(5)).await;
+            }
         })?;
     }
 
