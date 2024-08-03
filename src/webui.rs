@@ -133,6 +133,7 @@ const INDEX_HTML: &str = r#"
         d3.json("/status").then(data => {
             if (!data || !data.clients || !data.storage_nodes) {
                 console.error("Invalid data received from /status endpoint", data);
+                document.getElementById("test-result").innerText = "No graph, I can't draw this";
                 return;
             }
             const graph = {
