@@ -1,10 +1,9 @@
 use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
 use libp2p::{
-    core::{transport::MemoryTransport, upgrade},
-    noise, identity, yamux,
-    swarm::{Swarm, SwarmEvent, SwarmBuilder},
-    kad::{store::MemoryStore, Kademlia, KademliaEvent},
+    core::transport::MemoryTransport,
+    identity, noise, yamux,
+    swarm::{Swarm, SwarmEvent},
     PeerId, Transport,
 };
 use std::error::Error;
@@ -191,9 +190,7 @@ impl Network {
             .multiplex(yamux::Config::default())
             .boxed();
 
-        let store = MemoryStore::new(local_peer_id);
-        let kademlia = Kademlia::new(local_peer_id, store);
-        let swarm = SwarmBuilder::with_tokio_executor(transport, kademlia, local_peer_id).build();
+        let swarm = Swarm::new(transport, local_peer_id);
 
         let network = Network {
             message_sender: None,
@@ -216,8 +213,8 @@ impl Network {
                 Some(SwarmEvent::NewListenAddr { address, .. }) => {
                     println!("Listening on {:?}", address);
                 }
-                Some(SwarmEvent::Behaviour(KademliaEvent::OutboundQueryCompleted { result, .. })) => {
-                    println!("Query completed: {:?}", result);
+                Some(SwarmEvent::Behaviour(event)) => {
+                    println!("Unhandled Swarm Event: {:?}", event);
                 }
                 _ => {}
             }
