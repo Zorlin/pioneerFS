@@ -14,6 +14,7 @@ pub struct Network {
     deals: Vec<Deal>,
 }
 
+#[derive(Clone)]
 pub struct Deal {
     client_id: PeerId,
     storage_node_id: PeerId,
@@ -70,7 +71,7 @@ impl Network {
         }
 
         storage_node.add_balance(cost);
-        client.add_file(filename.clone());
+        client.add_file(filename.clone(), *storage_node_id);
 
         // Create a new deal
         self.deals.push(Deal {
@@ -110,10 +111,12 @@ impl Network {
     }
 
     pub fn check_deals(&mut self) {
-        let expired_deals: Vec<_> = self.deals.iter()
-            .filter(|d| d.start_time.elapsed() > d.duration)
-            .cloned()
-            .collect();
+        let mut expired_deals = Vec::new();
+        for deal in &self.deals {
+            if deal.start_time.elapsed() > deal.duration {
+                expired_deals.push(deal.clone());
+            }
+        }
 
         for deal in expired_deals {
             if let Err(e) = self.remove_file(&deal.client_id, &deal.storage_node_id, &deal.filename) {
@@ -127,7 +130,7 @@ impl Network {
         let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
         let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or("Storage node not found")?;
 
-        if !client.remove_file(filename) {
+        if !client.remove_file(filename, &deal.storage_node_id) {
             return Err("File not found in client's list");
         }
 
