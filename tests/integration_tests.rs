@@ -13,8 +13,8 @@ fn test_network_operations() {
 
     network.add_client(client1_id);
     network.add_client(client2_id);
-    network.add_storage_node(storage_node1_id);
-    network.add_storage_node(storage_node2_id);
+    network.add_storage_node(storage_node1_id, 10); // 10 PIO per GB
+    network.add_storage_node(storage_node2_id, 12); // 12 PIO per GB
 
     // Upload a file
     let filename = "test.txt".to_string();

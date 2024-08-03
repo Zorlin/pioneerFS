@@ -45,9 +45,9 @@ pub struct Network {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct StorageOffer {
     #[serde_as(as = "DisplayFromStr")]
-    storage_node_id: PeerId,
-    price_per_gb: u64,
-    available_space: usize,
+    pub storage_node_id: PeerId,
+    pub price_per_gb: u64,
+    pub available_space: usize,
 }
 
 #[serde_as]
