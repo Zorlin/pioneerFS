@@ -34,15 +34,6 @@ impl StorageNode {
         self.price_per_gb
     }
 
-    pub fn subtract_balance(&mut self, amount: u64) -> bool {
-        if self.balance >= amount {
-            self.balance -= amount;
-            true
-        } else {
-            false
-        }
-    }
-
     pub fn reputation(&self) -> u64 {
         self.reputation
     }
