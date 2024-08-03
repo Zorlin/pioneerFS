@@ -236,7 +236,7 @@ impl Network {
                 SwarmEvent::IncomingConnection { local_addr, send_back_addr, connection_id } => {
                     println!("Incoming connection from {:?} to {:?}", send_back_addr, local_addr);
                 }
-                SwarmEvent::Behaviour(kad::KademliaEvent::OutboundQueryProgressed { result, .. }) => {
+                SwarmEvent::Behaviour(kad::Event::OutboundQueryProgressed { result, .. }) => {
                     println!("Query completed: {:?}", result);
                 }
                 _ => println!("Unhandled Kademlia event: {:?}", event),
