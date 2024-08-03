@@ -28,12 +28,12 @@ impl Network {
         let current_storage_nodes = {
             let client = self.clients.get(client_id).ok_or_else(|| "Client not found".to_string())?;
             client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?.clone()
-        }
+        };
 
 
         if new_replication_factor <= current_storage_nodes.len() {
             return Err(format!("New replication factor must be higher than current ({}).", current_storage_nodes.len()));
-        }
+        };
 
 
         let additional_replications = new_replication_factor - current_storage_nodes.len();
