@@ -181,7 +181,7 @@ impl Network {
                 stored_files: node.stored_files().keys().cloned().collect(),
             })).collect(),
             clients: self.clients.iter().map(|(id, client)| (*id, ClientStatus {
-                files: client.get_file_locations().clone(),
+                files: client.files().clone(),
             })).collect(),
             deals: self.deals.iter().map(|deal| deal.clone()).collect(),
             marketplace: self.marketplace.iter().map(|offer| offer.clone()).collect(),
