@@ -42,9 +42,13 @@ mod tests {
     fn test_file_upload_and_download() {
         let mut network = Network::new();
         let client_id = PeerId::random();
-        let storage_node_id = PeerId::random();
         network.add_client(client_id);
-        network.add_storage_node(storage_node_id, 10); // Add a default price of 10
+        
+        // Add multiple storage nodes to ensure enough are available
+        for _ in 0..5 {
+            let storage_node_id = PeerId::random();
+            network.add_storage_node(storage_node_id, 10); // Add a default price of 10
+        }
 
         let filename = "test.txt".to_string();
         let data = b"Hello, world!".to_vec();
@@ -77,11 +81,13 @@ mod tests {
     fn test_file_replication() {
         let mut network = Network::new();
         let client_id = PeerId::random();
-        let storage_node_id1 = PeerId::random();
-        let storage_node_id2 = PeerId::random();
         network.add_client(client_id);
-        network.add_storage_node(storage_node_id1, 10); // Add a default price of 10
-        network.add_storage_node(storage_node_id2, 10); // Add a default price of 10
+        
+        // Add multiple storage nodes to ensure enough are available for replication
+        for _ in 0..5 {
+            let storage_node_id = PeerId::random();
+            network.add_storage_node(storage_node_id, 10); // Add a default price of 10
+        }
 
         let filename = "replicated.txt".to_string();
         let data = b"Replicate me!".to_vec();
@@ -90,20 +96,20 @@ mod tests {
         let initial_balance = network.get_balance(&client_id);
         assert_eq!(initial_balance, 1_000_000, "Initial balance should be 1,000,000");
 
-        // Upload file to first storage node
+        // Upload file
         network.upload_file(&client_id, filename.clone(), data.clone())
             .unwrap_or_else(|e| panic!("Failed to upload file: {}", e));
 
-        // Replicate file to second storage node
-        assert!(network.replicate_file(&client_id, &filename, 1).is_ok());
+        // Replicate file
+        assert!(network.replicate_file(&client_id, &filename, 2).is_ok());
 
-        // Download file from second storage node
+        // Download file
         let downloaded_data = network.download_file(&client_id, &filename).unwrap();
         assert_eq!(data, downloaded_data);
 
         // Check that the client's balance is deducted
         let client_balance = network.get_balance(&client_id);
         assert!(client_balance < 1_000_000, "Balance should be less than initial balance");
-        assert!(client_balance >= 999_990, "Balance should not be deducted by more than 10 tokens");
+        assert!(client_balance >= 999_970, "Balance should not be deducted by more than 30 tokens");
     }
 }
