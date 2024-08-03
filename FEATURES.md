@@ -4,7 +4,7 @@ The Feed:
 * During the testnet all Feed access is free, after testnet the Feed is paid for purely by client traffic and pays a spray of money towards SPs who host it. Nobody makes undue profit from it.
 
 Map mode:
-* View a map of the world - Earth - look to examples/canvas.rs for inspiration please!
+* View a map of the world - Earth - look to tests/examples/canvas.rs for inspiration please!
 * Nodes are represented by green asterisks
 * Clients are represented by purple asterisks
 * When clients upload data, part of the stream (representing their portion of the overall data flow) turns their colour - purple
