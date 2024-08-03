@@ -64,7 +64,19 @@ const INDEX_HTML: &str = r#"
 <body>
     <h1>Network Map</h1>
     <svg width="960" height="600"></svg>
+    <button id="run-tests-button">Run Advanced Network Tests</button>
+    <div id="test-result"></div>
     <script>
+        document.getElementById("run-tests-button").addEventListener("click", () => {
+            fetch("/run_tests")
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("test-result").innerText = data;
+                })
+                .catch(error => {
+                    document.getElementById("test-result").innerText = "Error: " + error;
+                });
+        });
         const width = 960;
         const height = 600;
 
