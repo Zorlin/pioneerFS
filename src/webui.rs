@@ -26,6 +26,7 @@ pub async fn start_webui(network: Arc<Mutex<Network>>, tx: broadcast::Sender<Str
 
     let run_tests = {
         let network = Arc::clone(&network);
+        let tx_clone = tx.clone();
         warp::path("run_tests").map(move || {
             // Trigger the advanced network tests
             let network = network.lock().unwrap();
@@ -33,7 +34,7 @@ pub async fn start_webui(network: Arc<Mutex<Network>>, tx: broadcast::Sender<Str
             // and updates the network state.
             // Assuming `run_advanced_network_tests` is a function that runs the tests
             // and updates the network state.
-            crate::run_advanced_network_tests(&network, tx.clone());
+            crate::run_advanced_network_tests(&network, tx_clone.clone());
             warp::reply::html("Advanced network tests started")
         })
     };
