@@ -59,6 +59,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         network.set_debug_level(DebugLevel::Low);
         let (tx, _rx) = broadcast::channel(100);
         run_replication_tests(&mut network, tx.clone());
+    } else if args.contains(&"--advanced-tests".to_string()) {
+        // Run advanced network tests
+        let mut network = Network::new();
+        network.set_debug_level(DebugLevel::Low);
+        let (tx, _rx) = broadcast::channel(100);
+        run_advanced_network_tests(&mut network, tx.clone());
     } else {
         // Run in normal mode
         let network = Arc::new(Mutex::new(Network::new()));
@@ -130,6 +136,7 @@ fn run_app<B: ratatui::backend::Backend>(
     tick_rate: Duration,
 ) -> io::Result<()> {
     let mut last_tick = Instant::now();
+    let mut rx = app.network.lock().unwrap().subscribe();
     loop {
         terminal.draw(|f| ui(f, &mut app))?;
 
@@ -180,6 +187,10 @@ fn run_app<B: ratatui::backend::Backend>(
                 }
             }
         }
+        if let Ok(message) = rx.try_recv() {
+            app.messages.push(message);
+        }
+
         if last_tick.elapsed() >= tick_rate {
             last_tick = Instant::now();
         }
