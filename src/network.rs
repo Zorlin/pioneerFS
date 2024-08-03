@@ -58,7 +58,7 @@ impl Network {
         let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
         let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or("Storage node not found")?;
 
-        let cost = (data.len() as u64) * STORAGE_COST_PER_BYTE * 2; // Double the cost to match the test expectation
+        let cost = data.len() as u64; // Cost is equal to the file size in bytes
         if !client.subtract_balance(cost) {
             return Err("Insufficient balance for upload");
         }
@@ -68,6 +68,7 @@ impl Network {
             return Err(e);
         }
 
+        storage_node.add_balance(cost); // Add the cost to the storage node's balance
         client.add_file(filename.clone(), *storage_node_id);
 
         // Create a new deal
@@ -82,14 +83,9 @@ impl Network {
         Ok(())
     }
 
-    pub fn download_file(&mut self, _client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<Vec<u8>, &'static str> {
+    pub fn download_file(&self, _client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<Vec<u8>, &'static str> {
         let storage_node = self.storage_nodes.get(storage_node_id).ok_or("Storage node not found")?;
-        let file_data = storage_node.get_file(filename).cloned().ok_or("File not found")?;
-
-        // Remove the cost calculation and balance updates
-        // This makes downloads free, matching the test expectations
-
-        Ok(file_data)
+        storage_node.get_file(filename).cloned().ok_or("File not found")
     }
 
     pub fn renew_deal(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<(), &'static str> {
