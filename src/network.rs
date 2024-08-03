@@ -119,16 +119,6 @@ impl Network {
         self.bids.get(filename)
     }
 
-    fn erasure_code_file(&self, data: &[u8]) -> Vec<Vec<u8>> {
-        let mut chunks = Vec::new();
-        for chunk in data.chunks(CHUNK_SIZE) {
-            chunks.push(chunk.to_vec());
-        }
-        
-        // For simplicity, we'll just duplicate each chunk as a basic form of erasure coding
-        // In a real implementation, you'd use a proper erasure coding library
-        chunks.iter().flat_map(|chunk| vec![chunk.clone(), chunk.clone()]).collect()
-    }
 
     pub fn get_network_status(&self) -> NetworkStatus {
         NetworkStatus {
