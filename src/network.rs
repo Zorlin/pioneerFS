@@ -30,6 +30,14 @@ impl Network {
             client.get_file_locations(filename).ok_or_else(|| "File not found".to_string())?.clone()
         };
 
+        // Initialize with at least one storage node and one client
+        let initial_client_id = PeerId::random();
+        let initial_storage_node_id = PeerId::random();
+        network.add_client(initial_client_id);
+        network.add_storage_node(initial_storage_node_id, 10); // Example price per GB
+
+        network
+
         if new_replication_factor <= current_storage_nodes.len() {
             return Err(format!("New replication factor must be higher than current ({}).", current_storage_nodes.len()));
         };
@@ -124,7 +132,7 @@ impl Bid {
         Self {
             storage_node_id,
             price_per_gb,
-        }
+        };
     }
 }
 
