@@ -116,7 +116,7 @@ pub struct Network {
     pub token: ERC20,
     pub bids: HashMap<String, Vec<Bid>>,
     pub debug_level: DebugLevel,
-    // pub kademlia: Option<Kademlia<MemoryStore>>,
+    pub kademlia: Kademlia<MemoryStore>,
 }
 
 pub struct Bid {
