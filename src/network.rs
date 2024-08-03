@@ -126,8 +126,7 @@ impl Bid {
         Self {
             storage_node_id,
             price_per_gb,
-        };
-        status
+        }
     }
 }
 
@@ -162,8 +161,7 @@ impl Deal {
             filename,
             start_time: Some(Instant::now()),
             duration,
-        };
-        status
+        }
     }
 
     pub fn start_time(&self) -> Instant {
@@ -193,7 +191,7 @@ impl Network {
     }
 
     pub fn get_network_status(&self) -> NetworkStatus {
-        let status = NetworkStatus {
+        NetworkStatus {
             storage_nodes: self.storage_nodes.keys().cloned().collect(),
             clients: self.clients.keys().cloned().collect(),
             deals: self.deals.len(),
