@@ -62,14 +62,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         run_replication_tests(&mut network, tx.clone());
     } else {
         // Run in normal mode
-        let mut network = Network::new();
+        let network = Network::new();
         let network_arc = Arc::new(Mutex::new(network));
 
         let (tx, _rx) = broadcast::channel(100);
 
         let webui_handle = {
-            let tx_clone = tx.clone();
-            let network_clone = Arc::clone(&network_arc);
             task::spawn(async move {
                 webui::start_webui(network_clone, tx_clone).await;
             })
