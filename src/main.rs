@@ -62,8 +62,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         run_replication_tests(&mut network, tx.clone());
     } else {
         // Run in normal mode
-        let network = Network::new();
-        let network_arc = Arc::new(Mutex::new(network));
+        let mut network = Network::new();
+        let network_arc = Arc::new(Mutex::new(network.clone()));
 
         let (tx, _rx) = broadcast::channel(100);
 
