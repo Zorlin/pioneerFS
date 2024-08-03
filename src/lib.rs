@@ -50,7 +50,8 @@ mod tests {
         let data = b"Hello, world!".to_vec();
 
         // Upload file
-        assert!(network.upload_file(&client_id, &storage_node_id, filename.clone(), data.clone()).is_ok());
+        network.upload_file(&client_id, &storage_node_id, filename.clone(), data.clone())
+            .expect("Failed to upload file");
 
         // Download file
         let downloaded_data = network.download_file(&client_id, &storage_node_id, &filename).unwrap();

@@ -132,8 +132,8 @@ impl Network {
         self.token.balance_of(peer_id)
     }
 
-    pub fn upload_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), &'static str> {
-        let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or("Storage node not found")?;
+    pub fn upload_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: String, data: Vec<u8>) -> Result<(), String> {
+        let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or_else(|| "Storage node not found".to_string())?;
 
         // Calculate the cost of storage
         let file_size_gb = (data.len() as f64 / (1024.0 * 1024.0 * 1024.0)).ceil() as u64;
@@ -141,16 +141,16 @@ impl Network {
 
         // Check if the client has enough balance and transfer tokens
         if !self.token.transfer(client_id, storage_node_id, cost) {
-            return Err("Insufficient balance to upload file");
+            return Err("Insufficient balance to upload file".to_string());
         }
 
         if let Err(e) = storage_node.store_file(filename.clone(), data.clone()) {
             // If storing fails, refund the client
             self.token.transfer(storage_node_id, client_id, cost);
-            return Err(e);
+            return Err(format!("Failed to store file: {}", e));
         }
 
-        let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
+        let client = self.clients.get_mut(client_id).ok_or_else(|| "Client not found".to_string())?;
         client.add_file(filename.clone(), *storage_node_id);
 
         // Create a new deal
@@ -162,7 +162,9 @@ impl Network {
         ));
 
         // Chain upload to other storage nodes
-        self.chain_upload(storage_node_id, &filename, &data, REPLICATION_FACTOR - 1)?;
+        if let Err(e) = self.chain_upload(storage_node_id, &filename, &data, REPLICATION_FACTOR - 1) {
+            println!("Warning: Failed to replicate file: {}", e);
+        }
 
         Ok(())
     }
