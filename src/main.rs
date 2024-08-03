@@ -63,7 +63,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             webui::start_webui().await;
         });
 
-        let terminal_handle = task::spawn_blocking(|| -> Result<(), Box<dyn Error + Send + Sync>> {
+        let terminal_handle = task::spawn_blocking(move || -> Result<(), Box<dyn Error + Send + Sync>> {
             enable_raw_mode()?;
             let mut stdout = io::stdout();
             execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
