@@ -1,9 +1,10 @@
 use libp2p::PeerId;
+use std::collections::HashMap;
 
 pub struct Client {
     peer_id: PeerId,
     balance: u64,
-    files: Vec<String>,
+    files: HashMap<String, Vec<PeerId>>,
 }
 
 impl Client {
@@ -11,7 +12,7 @@ impl Client {
         Client {
             peer_id,
             balance: 100000, // Start with 100,000 PIO
-            files: Vec::new(),
+            files: HashMap::new(),
         }
     }
 
@@ -36,20 +37,24 @@ impl Client {
         }
     }
 
-    pub fn add_file(&mut self, filename: String) {
-        self.files.push(filename);
+    pub fn add_file(&mut self, filename: String, storage_node: PeerId) {
+        self.files.entry(filename).or_insert_with(Vec::new).push(storage_node);
     }
 
-    pub fn remove_file(&mut self, filename: &str) -> bool {
-        if let Some(index) = self.files.iter().position(|f| f == filename) {
-            self.files.remove(index);
-            true
-        } else {
-            false
+    pub fn remove_file(&mut self, filename: &str, storage_node: &PeerId) -> bool {
+        if let Some(nodes) = self.files.get_mut(filename) {
+            if let Some(pos) = nodes.iter().position(|&node| node == *storage_node) {
+                nodes.remove(pos);
+                if nodes.is_empty() {
+                    self.files.remove(filename);
+                }
+                return true;
+            }
         }
+        false
     }
 
-    pub fn list_files(&self) -> &[String] {
+    pub fn list_files(&self) -> &HashMap<String, Vec<PeerId>> {
         &self.files
     }
 }

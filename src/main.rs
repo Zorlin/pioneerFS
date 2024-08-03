@@ -209,6 +209,9 @@ fn execute_command(app: &mut App) {
             app.messages.push("  list_sps - List all storage providers".to_string());
             app.messages.push("  upload_file <client_id> <sp_id> <filename> <content> - Upload a file".to_string());
             app.messages.push("  download_file <client_id> <sp_id> <filename> - Download a file".to_string());
+            app.messages.push("  renew_deal <client_id> <sp_id> <filename> - Renew a storage deal".to_string());
+            app.messages.push("  check_deals - Check and remove expired deals".to_string());
+            app.messages.push("  get_reputation <sp_id> - Get the reputation of a storage provider".to_string());
         }
         "add_client" => {
             let peer_id = PeerId::random();
@@ -261,6 +264,36 @@ fn execute_command(app: &mut App) {
             match app.network.download_file(&client_id, &sp_id, filename) {
                 Ok(data) => app.messages.push(format!("Downloaded file content: {:?}", String::from_utf8_lossy(&data))),
                 Err(e) => app.messages.push(format!("Failed to download file: {}", e)),
+            }
+        }
+        "renew_deal" => {
+            if parts.len() != 4 {
+                app.messages.push("Usage: renew_deal <client_id> <sp_id> <filename>".to_string());
+                return;
+            }
+            let client_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
+            let sp_id = PeerId::from_bytes(&hex::decode(parts[2]).unwrap()).unwrap();
+            let filename = parts[3];
+
+            match app.network.renew_deal(&client_id, &sp_id, filename) {
+                Ok(_) => app.messages.push("Deal renewed successfully".to_string()),
+                Err(e) => app.messages.push(format!("Failed to renew deal: {}", e)),
+            }
+        }
+        "check_deals" => {
+            app.network.check_deals();
+            app.messages.push("Checked and removed expired deals".to_string());
+        }
+        "get_reputation" => {
+            if parts.len() != 2 {
+                app.messages.push("Usage: get_reputation <sp_id>".to_string());
+                return;
+            }
+            let sp_id = PeerId::from_bytes(&hex::decode(parts[1]).unwrap()).unwrap();
+            if let Some(sp) = app.network.storage_nodes().get(&sp_id) {
+                app.messages.push(format!("Reputation of SP {}: {}", sp_id, sp.reputation()));
+            } else {
+                app.messages.push(format!("Storage provider with ID {} not found", sp_id));
             }
         }
         _ => {

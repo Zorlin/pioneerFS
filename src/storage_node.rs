@@ -8,6 +8,7 @@ pub struct StorageNode {
     balance: u64,
     stored_files: HashMap<String, Vec<u8>>,
     available_space: usize,
+    reputation: u64,
 }
 
 impl StorageNode {
@@ -17,7 +18,20 @@ impl StorageNode {
             balance: 0,
             stored_files: HashMap::new(),
             available_space: MAX_STORAGE,
+            reputation: 100, // Start with a base reputation
         }
+    }
+
+    pub fn reputation(&self) -> u64 {
+        self.reputation
+    }
+
+    pub fn increase_reputation(&mut self, amount: u64) {
+        self.reputation += amount;
+    }
+
+    pub fn decrease_reputation(&mut self, amount: u64) {
+        self.reputation = self.reputation.saturating_sub(amount);
     }
 
     pub fn peer_id(&self) -> &PeerId {

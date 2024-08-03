@@ -1,13 +1,25 @@
 use crate::{StorageNode, Client};
 use libp2p::PeerId;
 use std::collections::HashMap;
+use std::time::{Duration, Instant};
 
 const STORAGE_COST_PER_BYTE: u64 = 1; // 1 PIO per byte
 const REPLICATION_COST_PER_BYTE: u64 = 1; // 1 PIO per byte for replication
+const RETRIEVAL_COST_PER_BYTE: u64 = 1; // 1 PIO per byte for retrieval
+const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 
 pub struct Network {
     storage_nodes: HashMap<PeerId, StorageNode>,
     clients: HashMap<PeerId, Client>,
+    deals: Vec<Deal>,
+}
+
+pub struct Deal {
+    client_id: PeerId,
+    storage_node_id: PeerId,
+    filename: String,
+    start_time: Instant,
+    duration: Duration,
 }
 
 impl Network {
@@ -15,6 +27,7 @@ impl Network {
         Network {
             storage_nodes: HashMap::new(),
             clients: HashMap::new(),
+            deals: Vec::new(),
         }
     }
 
@@ -51,19 +64,63 @@ impl Network {
             return Err("Insufficient balance for upload");
         }
 
-        if let Err(e) = storage_node.store_file(filename.clone(), data) {
+        if let Err(e) = storage_node.store_file(filename.clone(), data.clone()) {
             client.add_balance(cost); // Refund the client if storage fails
             return Err(e);
         }
 
         storage_node.add_balance(cost);
-        client.add_file(filename);
+        client.add_file(filename.clone());
+
+        // Create a new deal
+        self.deals.push(Deal {
+            client_id: *client_id,
+            storage_node_id: *storage_node_id,
+            filename: filename.clone(),
+            start_time: Instant::now(),
+            duration: DEAL_DURATION,
+        });
+
         Ok(())
     }
 
-    pub fn download_file(&self, _client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<Vec<u8>, &'static str> {
+    pub fn download_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<Vec<u8>, &'static str> {
         let storage_node = self.storage_nodes.get(storage_node_id).ok_or("Storage node not found")?;
-        storage_node.get_file(filename).cloned().ok_or("File not found")
+        let file_data = storage_node.get_file(filename).cloned().ok_or("File not found")?;
+
+        let cost = (file_data.len() as u64) * RETRIEVAL_COST_PER_BYTE;
+        let client = self.clients.get_mut(client_id).ok_or("Client not found")?;
+        if !client.subtract_balance(cost) {
+            return Err("Insufficient balance for download");
+        }
+
+        let storage_node = self.storage_nodes.get_mut(storage_node_id).ok_or("Storage node not found")?;
+        storage_node.add_balance(cost);
+
+        Ok(file_data)
+    }
+
+    pub fn renew_deal(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<(), &'static str> {
+        let deal = self.deals.iter_mut()
+            .find(|d| d.client_id == *client_id && d.storage_node_id == *storage_node_id && d.filename == filename)
+            .ok_or("Deal not found")?;
+
+        deal.start_time = Instant::now();
+        Ok(())
+    }
+
+    pub fn check_deals(&mut self) {
+        let expired_deals: Vec<_> = self.deals.iter()
+            .filter(|d| d.start_time.elapsed() > d.duration)
+            .cloned()
+            .collect();
+
+        for deal in expired_deals {
+            if let Err(e) = self.remove_file(&deal.client_id, &deal.storage_node_id, &deal.filename) {
+                println!("Error removing expired file: {}", e);
+            }
+            self.deals.retain(|d| d.filename != deal.filename || d.client_id != deal.client_id);
+        }
     }
 
     pub fn remove_file(&mut self, client_id: &PeerId, storage_node_id: &PeerId, filename: &str) -> Result<(), &'static str> {
