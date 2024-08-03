@@ -1,0 +1,3 @@
+[submodule "peerbit-examples"]
+	path = peerbit-examples
+	url = https://github.com/dao-xyz/peerbit-examples

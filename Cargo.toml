@@ -1,0 +1,20 @@
+[package]
+name = "pioneerFS"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "pioneerfs"
+path = "src/lib.rs"
+
+[dependencies]
+libp2p = { version = "0.51", features = ["tcp", "mdns", "gossipsub", "noise", "yamux", "ping"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+futures = "0.3"
+crossterm = "0.25"
+ratatui = "0.20"
+hex = "0.4"
+
+[dev-dependencies]
+tokio-test = "0.4"
