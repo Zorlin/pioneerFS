@@ -1,6 +1,6 @@
 use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
-use libp2p::PeerId;
+use libp2p::{PeerId, kad::{Kademlia, store::MemoryStore}};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
@@ -174,6 +174,9 @@ impl Deal {
 
 impl Network {
     pub fn new() -> Self {
+        let store = MemoryStore::new(PeerId::random());
+        let kademlia = Kademlia::new(PeerId::random(), store);
+
         let mut network = Network {
             message_sender: None,
             storage_nodes: HashMap::new(),
@@ -183,7 +186,7 @@ impl Network {
             token: ERC20::new("PioDollar".to_string(), "PIO".to_string(), 1_000_000_000), // 1 billion initial supply
             bids: HashMap::new(),
             debug_level: DebugLevel::None,
-            kademlia: None,
+            kademlia,
         };
 
         // Initialize with at least one storage node and one client
