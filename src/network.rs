@@ -1,17 +1,12 @@
 use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
-use libp2p::{
-    identity,
-    tcp::Config as TcpConfig,
-    noise::{Config as NoiseConfig, Keypair, X25519},
-    yamux::Config as YamuxConfig,
-    swarm::{Swarm, SwarmEvent},
-    kad::{store::MemoryStore},
-    libp2p_kad::{Kademlia, KademliaEvent},
-    PeerId,
-    SwarmBuilder,
-};
-use libp2p::core::upgrade;
+use libp2p_core::{Transport, upgrade, transport::MemoryTransport};
+use libp2p_noise as noise;
+use libp2p_identity as identity;
+use libp2p_yamux as yamux;
+use libp2p_swarm::{Swarm, SwarmEvent, SwarmBuilder};
+use libp2p_kad::{store::MemoryStore, Kademlia, KademliaEvent};
+use libp2p::PeerId;
 use std::error::Error;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
@@ -192,10 +187,13 @@ impl Network {
 
         let transport = TcpConfig::new()
             .nodelay(true)
-            .upgrade(upgrade::Version::V1)
-            .authenticate(NoiseConfig::xx(local_key).into_authenticated())
-            .multiplex(YamuxConfig::default())
-            .boxed();
+let id_keys = identity::Keypair::generate_ed25519();
+let noise = noise::Config::new(&id_keys).unwrap();
+let transport = MemoryTransport::default()
+    .upgrade(upgrade::Version::V1)
+    .authenticate(noise)
+    .multiplex(yamux::Config::default())
+    .boxed();
 
         let store = MemoryStore::new(local_peer_id);
         let kademlia = Kademlia::new(local_peer_id, store);
