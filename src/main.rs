@@ -476,8 +476,8 @@ fn display_abstract_network(network: &Network) {
     println!("Network Abstract State:");
     println!("  Clients: {}", status.clients.len());
     println!("  Storage Nodes: {}", status.storage_nodes.len());
-    println!("  Active Deals: {}", status.deals.len());
-    println!("  Marketplace Offers: {}", status.marketplace.len());
+    println!("  Active Deals: {}", status.deals);
+    println!("  Marketplace Offers: {}", status.marketplace);
     println!("----------------------------");
 }
 fn run_advanced_network_tests(_network: &Network, tx: broadcast::Sender<String>) {
