@@ -13,7 +13,7 @@ const DEAL_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 pub enum DebugLevel {
     None,
     Low,
-    High,
+    High
 
 impl DebugLevel {
     pub fn is_enabled(&self) -> bool {
