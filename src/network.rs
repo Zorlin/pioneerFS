@@ -95,6 +95,7 @@ impl Network {
             deals: Vec::new(),
             marketplace: VecDeque::new(),
             token: ERC20::new("PioDollar".to_string(), "PIO".to_string(), 1_000_000_000), // 1 billion initial supply
+            bids: HashMap::new(),
         }
     }
 
@@ -285,19 +286,25 @@ impl Network {
         }
 
         client.remove_file(filename);
+        self.deals.retain(|d| d.filename != filename || d.client_id != *client_id);
         Ok(())
     }
 
-    pub fn replicate_file(&mut self, source_node_id: &PeerId, target_node_id: &PeerId, filename: &str) -> Result<(), &'static str> {
+    pub fn replicate_file(&mut self, client_id: &PeerId, filename: &str, remaining_replications: usize) -> Result<(), &'static str> {
+        let client = self.clients.get(client_id).ok_or("Client not found")?;
+        let storage_nodes = client.get_file_locations(filename).ok_or("File not found")?;
+        
+        if storage_nodes.is_empty() {
+            return Err("No storage nodes found for the file");
+        }
+
+        let source_node_id = storage_nodes[0];
         let file_data = {
-            let source_node = self.storage_nodes.get(source_node_id).ok_or("Source storage node not found")?;
+            let source_node = self.storage_nodes.get(&source_node_id).ok_or("Source storage node not found")?;
             source_node.get_file(filename).ok_or("File not found on source node")?.clone()
         };
 
-        let target_node = self.storage_nodes.get_mut(target_node_id).ok_or("Target storage node not found")?;
-        target_node.store_file(filename.to_string(), file_data)?;
-
-        Ok(())
+        self.chain_upload(&source_node_id, filename, &file_data, remaining_replications)
     }
 
     pub fn add_storage_offer(&mut self, storage_node_id: PeerId, price_per_gb: u64, available_space: usize) {
