@@ -284,7 +284,7 @@ impl Network {
         client.add_file(filename.clone(), stored_nodes);
         self.debug_log(&format!("Updated client {} file record for {}", client_id, filename));
 
-        Ok(())
+        Ok(stored_nodes)
     }
 
     fn chain_upload(&mut self, source_node_id: &PeerId, filename: &str, data: &Vec<u8>, remaining_replications: usize) -> Result<(), &'static str> {
