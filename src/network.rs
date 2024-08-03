@@ -268,7 +268,7 @@ impl Network {
         }
 
         for deal in expired_deals {
-            if let Err(e) = self.remove_file(&deal.client_id, &deal.storage_node_id, &deal.filename) {
+            if let Err(e) = self.remove_file(&deal.client_id, &deal.filename) {
                 println!("Error removing expired file: {}", e);
             }
             self.deals.retain(|d| d.filename != deal.filename || d.client_id != deal.client_id);
