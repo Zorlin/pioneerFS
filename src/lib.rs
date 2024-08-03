@@ -54,11 +54,11 @@ mod tests {
         assert_eq!(initial_balance, 1_000_000, "Initial balance should be 1,000,000");
 
         // Upload file
-        network.upload_file(&client_id, &storage_node_id, filename.clone(), data.clone())
+        network.upload_file(&client_id, filename.clone(), data.clone())
             .unwrap_or_else(|e| panic!("Failed to upload file: {}", e));
 
         // Download file
-        let downloaded_data = network.download_file(&client_id, &storage_node_id, &filename).unwrap();
+        let downloaded_data = network.download_file(&client_id, &filename).unwrap();
         assert_eq!(data, downloaded_data);
 
         // Check that the client's balance is deducted
@@ -67,10 +67,10 @@ mod tests {
         assert!(client_balance >= 999_990, "Balance should not be deducted by more than 10 tokens");
 
         // Remove file
-        assert!(network.remove_file(&client_id, &storage_node_id, &filename).is_ok());
+        assert!(network.remove_file(&client_id, &filename).is_ok());
 
         // Try to download removed file
-        assert!(network.download_file(&client_id, &storage_node_id, &filename).is_err());
+        assert!(network.download_file(&client_id, &filename).is_err());
     }
 
     #[test]
@@ -91,14 +91,14 @@ mod tests {
         assert_eq!(initial_balance, 1_000_000, "Initial balance should be 1,000,000");
 
         // Upload file to first storage node
-        network.upload_file(&client_id, &storage_node_id1, filename.clone(), data.clone())
+        network.upload_file(&client_id, filename.clone(), data.clone())
             .unwrap_or_else(|e| panic!("Failed to upload file: {}", e));
 
         // Replicate file to second storage node
-        assert!(network.replicate_file(&storage_node_id1, &storage_node_id2, &filename).is_ok());
+        assert!(network.replicate_file(&client_id, &filename, 1).is_ok());
 
         // Download file from second storage node
-        let downloaded_data = network.download_file(&client_id, &storage_node_id2, &filename).unwrap();
+        let downloaded_data = network.download_file(&client_id, &filename).unwrap();
         assert_eq!(data, downloaded_data);
 
         // Check that the client's balance is deducted
