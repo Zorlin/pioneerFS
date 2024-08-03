@@ -18,9 +18,6 @@ pub enum DebugLevel {
 impl DebugLevel {
     pub fn is_enabled(&self) -> bool {
         matches!(self, DebugLevel::Low | DebugLevel::High)
-        };
-        self.debug_log(&format!("Network status: {:?}", status));
-        status
 }
 
 impl Network {
