@@ -193,17 +193,13 @@ impl Network {
         let transport = TcpConfig::new()
             .nodelay(true)
             .upgrade(upgrade::Version::V1)
-            .authenticate(NoiseConfig::xx(Keypair::<X25519Spec>::new().into_authentic(&local_key)?))
+            .authenticate(NoiseConfig::xx(Keypair::<X25519Spec>::new().into_authentic(&local_key)?).unwrap())
             .multiplex(YamuxConfig::default())
             .boxed();
 
         let store = MemoryStore::new(local_peer_id);
         let kademlia = Kademlia::with_config(local_peer_id, store, KademliaConfig::default());
-        let swarm = SwarmBuilder::with_new_identity(transport, kademlia, local_peer_id)
-            .executor(Box::new(|fut| {
-                tokio::spawn(fut);
-            }))
-            .build();
+        let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id).build();
 
         let mut network = Network {
             message_sender: None,
