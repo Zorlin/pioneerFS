@@ -58,7 +58,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // Run in test mode
         let mut network = Network::new();
         network.set_debug_level(DebugLevel::Low);
-        run_replication_tests(&mut network);
+        run_replication_tests(&mut network, tx.clone());
     } else {
         // Run in normal mode
         let mut network = Network::new();
@@ -482,7 +482,7 @@ fn display_abstract_network(network: &Network) {
     println!("  Marketplace Offers: {}", status.marketplace.len());
     println!("----------------------------");
 }
-fn run_advanced_network_tests(_network: &Network) {
+fn run_advanced_network_tests(_network: &Network, tx: broadcast::Sender<String>) {
     // Implement the logic to run the advanced network tests
     // and update the network state.
     // This is a placeholder implementation.

@@ -1,5 +1,5 @@
 use warp::{Filter, ws::Message, ws::WebSocket};
-use futures::{FutureExt, StreamExt, SinkExt};
+use futures::{StreamExt, SinkExt};
 use tokio::sync::broadcast;
 use pioneerfs::network::Network;
 use serde_json::json;
