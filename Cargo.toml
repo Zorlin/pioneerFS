@@ -17,6 +17,7 @@ futures = "0.3"
 crossterm = "0.27"
 ratatui = "0.24"
 hex = "0.4"
+rand = "0.8"
 
 [dev-dependencies]
 tokio-test = "0.4"
