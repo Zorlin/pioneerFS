@@ -55,6 +55,7 @@ impl App {
         app
     }
 }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -143,6 +144,9 @@ fn adjust_pricing(network: &mut Network) {
 
 fn run_replication_tests(network: &mut Network, tx: broadcast::Sender<String>) -> Result<(), Box<dyn Error>> {
     let mut rng = rand::thread_rng();
+    // Add the missing closing brace for the function
+    Ok(())
+}
 
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
