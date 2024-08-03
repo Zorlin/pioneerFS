@@ -4,10 +4,11 @@ use libp2p::{
     identity,
     kad::store::MemoryStore,
     tcp::Config as TcpConfig,
-    noise::{Config as NoiseConfig, X25519, Keypair, AuthenticKeypair},
+    noise::{Config as NoiseConfig, X25519Spec, Keypair, AuthenticKeypair},
     yamux::Config as YamuxConfig,
     swarm::{Swarm, SwarmEvent},
     core::upgrade,
+    kad::{Kademlia, KademliaConfig, KademliaEvent},
     PeerId,
     SwarmBuilder,
 };
@@ -192,13 +193,13 @@ impl Network {
         let transport = TcpConfig::new()
             .nodelay(true)
             .upgrade(upgrade::Version::V1)
-            .authenticate(NoiseConfig::xx(Keypair::<X25519>::new().into_authentic(&local_key)?).unwrap())
+            .authenticate(NoiseConfig::xx(Keypair::<X25519Spec>::new().into_authentic(&local_key)?).unwrap())
             .multiplex(YamuxConfig::default())
             .boxed();
 
         let store = MemoryStore::new(local_peer_id);
         let kademlia = Kademlia::with_config(local_peer_id, store, KademliaConfig::default());
-        let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id).executor(Box::new(|fut| {
+        let swarm = SwarmBuilder::with_new_identity(transport, kademlia, local_peer_id).executor(Box::new(|fut| {
             tokio::spawn(fut);
         })).build();
 
