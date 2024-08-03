@@ -27,16 +27,48 @@ This project implements a decentralized storage network using libp2p in Rust. It
 
 ## Usage
 
-To run the program and interact with it:
+### Starting the Testnet
 
-1. Start the program:
+To start the testnet and interact with it:
+
+1. Ensure you have the necessary dependencies installed:
    ```
-   cargo run
+   cargo install --path .
    ```
 
-2. The program will start a simulation of the decentralized storage network. You'll see output in the console showing the creation of storage nodes and clients.
+2. Start the testnet:
+   ```
+   cargo run --bin testnet
+   ```
 
-3. Interact with the network:
+3. The testnet will initialize and you'll see output in the console showing the creation of storage nodes and clients.
+
+### Deploying Smart Contracts
+
+Before interacting with the network, you need to deploy the necessary smart contracts:
+
+1. Install the Solidity compiler if you haven't already:
+   ```
+   npm install -g solc
+   ```
+
+2. Compile the smart contracts:
+   ```
+   solc --bin --abi contracts/*.sol -o build
+   ```
+
+3. Deploy the contracts to the testnet:
+   ```
+   cargo run --bin deploy_contracts
+   ```
+
+   This will deploy the contracts and output their addresses. Make note of these addresses as you'll need them for interacting with the network.
+
+### Interacting with the Network
+
+Once the testnet is running and contracts are deployed:
+
+1. Interact with the network:
    - To store a file: Enter `store <client_id> <storage_node_id> <filename> <file_content>`
    - To retrieve a file: Enter `retrieve <client_id> <storage_node_id> <filename>`
    - To remove a file: Enter `remove <client_id> <storage_node_id> <filename>`
@@ -51,7 +83,11 @@ To run the program and interact with it:
    balance client 1
    ```
 
-4. The program will provide feedback for each action, showing success messages or errors.
+2. The program will provide feedback for each action, showing success messages or errors.
+
+### Stopping the Testnet
+
+To stop the testnet, simply press `Ctrl+C` in the terminal where it's running.
 
 ## Project Structure
 
