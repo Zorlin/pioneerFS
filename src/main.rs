@@ -106,8 +106,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
             })
         };
 
-        webui_handle.await??;
-        terminal_handle.await??;
+        if let Err(e) = webui_handle.await {
+            eprintln!("Error in webui_handle: {:?}", e);
+        }
+
+        if let Err(e) = terminal_handle.await {
+            eprintln!("Error in terminal_handle: {:?}", e);
+        }
     }
 
     Ok(())
