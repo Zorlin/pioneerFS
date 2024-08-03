@@ -3,13 +3,12 @@ use tokio::sync::broadcast::Sender;
 use libp2p::{
     identity,
     kad::{store::MemoryStore, Kademlia, KademliaConfig, KademliaEvent},
-    tcp::TcpConfig,
-    noise::{NoiseConfig, X25519Spec, Keypair},
-    yamux::YamuxConfig,
+    tcp::Config as TcpConfig,
+    noise::{Config as NoiseConfig, X25519Spec, Keypair},
+    yamux::Config as YamuxConfig,
     swarm::{Swarm, SwarmEvent},
     core::upgrade,
     PeerId,
-    Transport,
     SwarmBuilder,
 };
 use std::error::Error;
