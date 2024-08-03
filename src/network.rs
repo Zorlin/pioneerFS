@@ -198,9 +198,7 @@ impl Network {
 
         let store = MemoryStore::new(local_peer_id);
         let kademlia = Kademlia::new(local_peer_id, store);
-        let swarm = SwarmBuilder::with_existing_identity(local_key)
-            .with_transport(transport)
-            .with_behaviour(kademlia)
+        let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id)
             .executor(Box::new(|fut| {
                 tokio::spawn(fut);
             }))
