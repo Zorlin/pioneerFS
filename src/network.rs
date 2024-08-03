@@ -2,13 +2,12 @@ use crate::{StorageNode, Client, erc20::ERC20};
 use tokio::sync::broadcast::Sender;
 use libp2p::{
     identity,
-    kad::store::MemoryStore,
     tcp::Config as TcpConfig,
-    noise::{Config as NoiseConfig, Keypair, AuthenticKeypair, X25519},
+    noise::{Config as NoiseConfig, Keypair, X25519},
     yamux::Config as YamuxConfig,
     swarm::{Swarm, SwarmEvent},
     core::upgrade,
-    kad::{Kademlia, store::MemoryStore, KademliaConfig, KademliaEvent},
+    kad::{Kademlia, KademliaConfig, KademliaEvent},
     PeerId,
     Transport,
 };
@@ -192,14 +191,13 @@ impl Network {
 
         let transport = TcpConfig::new()
             .nodelay(true)
-            .upgrade(upgrade::Version::V1)
-            .authenticate(NoiseConfig::xx(Keypair::<X25519>::new().into_authentic(&local_key)?).unwrap())
+            .authenticate(NoiseConfig::new(&local_key).unwrap())
             .multiplex(YamuxConfig::default())
             .boxed();
 
         let store = MemoryStore::new(local_peer_id);
         let kademlia = Kademlia::with_config(local_peer_id, store, KademliaConfig::default());
-        let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id).executor(Box::new(|fut| {
+        let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id).build();
             tokio::spawn(fut);
         })).build();
 
