@@ -48,6 +48,14 @@ impl StorageNode {
         &self.peer_id
     }
 
+    pub fn used_space(&self) -> usize {
+        MAX_STORAGE - self.available_space
+    }
+
+    pub fn total_space(&self) -> usize {
+        MAX_STORAGE
+    }
+
     pub fn store_file(&mut self, filename: String, data: Vec<u8>) -> Result<(), &'static str> {
         if data.len() > self.available_space {
             return Err("Not enough space to store the file");
