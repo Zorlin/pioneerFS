@@ -3,7 +3,7 @@ use libp2p::PeerId;
 use serde::{Serialize, Deserialize};
 use tokio::sync::broadcast::Sender;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
 pub struct ERC20 {
     name: String,
     symbol: String,
