@@ -45,13 +45,6 @@ impl Network {
             return Err(format!("Not enough additional storage nodes available. Required: {}, Available: {}", additional_replications, available_nodes.len()));
         };
 
-        // Initialize with at least one storage node and one client
-        let initial_client_id = PeerId::random();
-        let initial_storage_node_id = PeerId::random();
-        network.add_client(initial_client_id);
-        network.add_storage_node(initial_storage_node_id, 10); // Example price per GB
-
-        network
 
         let selected_nodes: Vec<PeerId> = available_nodes.choose_multiple(&mut rand::thread_rng(), additional_replications).cloned().collect();
 
@@ -69,14 +62,18 @@ impl Network {
         for &node_id in &selected_nodes {
             let storage_node = self.storage_nodes.get_mut(&node_id).ok_or_else(|| "Storage node not found".to_string())?;
             storage_node.store_file(filename.to_string(), file_data.clone())?;
-        }
+        };
+
+        // Initialize with at least one storage node and one client
+        let initial_client_id = PeerId::random();
+        let initial_storage_node_id = PeerId::random();
 
         // Update the client's file locations
         if let Some(client) = self.clients.get_mut(client_id) {
             let mut updated_locations = current_storage_nodes;
             updated_locations.extend(selected_nodes);
             client.add_file(filename.to_string(), updated_locations);
-        }
+        };
 
         self.debug_log(&format!("Successfully increased replication factor for file: {} to {}", filename, new_replication_factor));
         Ok(())
