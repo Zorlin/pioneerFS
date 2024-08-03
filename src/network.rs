@@ -125,7 +125,7 @@ impl Bid {
         Self {
             storage_node_id,
             price_per_gb,
-        };
+        }
     }
 }
 
@@ -160,7 +160,7 @@ impl Deal {
             filename,
             start_time: Some(Instant::now()),
             duration,
-        };
+        }
     }
 
     pub fn start_time(&self) -> Instant {
