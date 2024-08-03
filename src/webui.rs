@@ -1,5 +1,5 @@
 use warp::Filter;
-use crate::network::Network;
+use pioneerfs::network::Network;
 use std::sync::{Arc, Mutex};
 
 pub async fn start_webui(network: Arc<Mutex<Network>>) {

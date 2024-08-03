@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     } else {
         // Run in normal mode
         let webui_handle = task::spawn(async {
-            webui::start_webui().await;
+            webui::start_webui(network.clone()).await;
         });
 
         let terminal_handle = task::spawn_blocking(move || -> Result<(), Box<dyn Error + Send + Sync>> {
