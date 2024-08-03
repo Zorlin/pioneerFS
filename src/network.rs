@@ -5,7 +5,7 @@ use libp2p::{
     identity, noise, yamux,
     swarm::{Swarm, SwarmEvent},
     SwarmBuilder,
-    kad::{self, store::MemoryStore, Event},
+    kad::{self, store::MemoryStore},
     PeerId, Transport,
 };
 use std::error::Error;
@@ -501,7 +501,7 @@ impl Network {
         Ok(())
     }
 }
-#[derive(libp2p::swarm::NetworkBehaviour)]
+#[derive(libp2p::NetworkBehaviour)]
 struct NetworkBehaviourImpl {
     kademlia: kad::Behaviour<kad::store::MemoryStore>,
 }
