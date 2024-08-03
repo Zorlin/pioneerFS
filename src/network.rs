@@ -4,6 +4,7 @@ use libp2p::{
     core::{transport::MemoryTransport, upgrade},
     identity, noise, yamux,
     swarm::{Swarm, SwarmEvent, NetworkBehaviour},
+    kad::Kademlia,
     PeerId, Transport,
 };
 use std::error::Error;
@@ -122,7 +123,8 @@ pub struct Network {
     pub token: ERC20,
     pub bids: HashMap<String, Vec<Bid>>,
     pub debug_level: DebugLevel,
-    pub swarm: Swarm<DummyBehaviour>,
+    pub swarm: Swarm<NetworkBehaviourImpl>,
+    pub kademlia: Kademlia<MemoryStore>,
 }
 
 pub struct Bid {
@@ -190,7 +192,9 @@ impl Network {
             .multiplex(yamux::YamuxConfig::default())
             .boxed();
 
-        let behaviour = DummyBehaviour {};
+        let store = MemoryStore::new(local_peer_id);
+        let kademlia = Kademlia::new(local_peer_id, store);
+        let behaviour = NetworkBehaviourImpl { kademlia };
         let swarm = Swarm::new(transport, behaviour, local_peer_id);
 
         let network = Network {
@@ -203,6 +207,7 @@ impl Network {
             bids: HashMap::new(),
             debug_level: DebugLevel::None,
             swarm,
+            kademlia: behaviour.kademlia,
         };
 
         Ok(network)
@@ -214,8 +219,13 @@ impl Network {
                 Some(SwarmEvent::NewListenAddr { address, .. }) => {
                     println!("Listening on {:?}", address);
                 }
-                Some(SwarmEvent::Behaviour(event)) => {
-                    println!("Unhandled Swarm Event: {:?}", event);
+                Some(SwarmEvent::Behaviour(NetworkBehaviourEvent::Kademlia(event))) => {
+                    match event {
+                        KademliaEvent::OutboundQueryCompleted { result, .. } => {
+                            println!("Query completed: {:?}", result);
+                        }
+                        _ => println!("Unhandled Kademlia event: {:?}", event),
+                    }
                 }
                 _ => {}
             }
@@ -476,4 +486,6 @@ impl Network {
     }
 }
 #[derive(NetworkBehaviour)]
-struct DummyBehaviour {}
+struct NetworkBehaviourImpl {
+    kademlia: Kademlia<MemoryStore>,
+}
