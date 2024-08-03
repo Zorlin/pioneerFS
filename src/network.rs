@@ -198,8 +198,6 @@ impl Network {
         let store = MemoryStore::new(local_peer_id);
         let kademlia = Kademlia::with_config(local_peer_id, store, KademliaConfig::default());
         let swarm = SwarmBuilder::new(transport, kademlia, local_peer_id).build();
-            tokio::spawn(fut);
-        })).build();
 
         let mut network = Network {
             message_sender: None,
