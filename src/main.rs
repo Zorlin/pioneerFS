@@ -63,16 +63,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let mut network = Network::new();
         let network_arc = Arc::new(Mutex::new(network));
 
+        let (tx, _rx) = broadcast::channel(100);
+
         let webui_handle = {
             let network_clone = Arc::clone(&network_arc);
+            let tx_clone = tx.clone();
             task::spawn(async move {
-                webui::start_webui(network_clone).await;
+                webui::start_webui(network_clone, tx_clone).await;
             })
         };
 
         let terminal_handle = {
             let network_clone = Arc::clone(&network_arc);
+            let tx_clone = tx.clone();
             task::spawn_blocking(move || -> Result<(), Box<dyn Error + Send + Sync>> {
+                let tx = tx_clone;
                 enable_raw_mode()?;
                 let mut stdout = io::stdout();
                 execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -440,18 +445,26 @@ fn run_replication_tests(network: &mut Network) {
     
     for i in 0..100 {
         let client_id = PeerId::random();
-        network.add_client(client_id);
+        network.add_client(client_id.clone());
+        tx.send(format!("Added client with PeerId: {}", client_id)).unwrap();
         
         let sp_id = PeerId::random();
-        network.add_storage_node(sp_id, rng.gen_range(10..20));
+        network.add_storage_node(sp_id.clone(), rng.gen_range(10..20));
+        tx.send(format!("Added storage provider (SP) with PeerId: {}", sp_id)).unwrap();
         
         let filename = format!("test_file_{}.txt", i);
         let data = vec![0u8; rng.gen_range(1000..10000)];
         let replication_factor = rng.gen_range(2..5);
         
         match network.upload_file(&client_id, filename.clone(), data, replication_factor) {
-            Ok(_) => println!("Test {}: File uploaded successfully", i),
-            Err(e) => println!("Test {}: Upload failed - {}", i, e),
+            Ok(_) => {
+                println!("Test {}: File uploaded successfully", i);
+                tx.send(format!("Test {}: File uploaded successfully", i)).unwrap();
+            }
+            Err(e) => {
+                println!("Test {}: Upload failed - {}", i, e);
+                tx.send(format!("Test {}: Upload failed - {}", i, e)).unwrap();
+            }
         }
         
         // Display abstract network state
@@ -472,6 +485,6 @@ fn run_advanced_network_tests(_network: &Network) {
     // Implement the logic to run the advanced network tests
     // and update the network state.
     // This is a placeholder implementation.
-    println!("Running advanced network tests...");
+    tx.send("Running advanced network tests...".to_string()).unwrap();
     // Update the network state here
 }

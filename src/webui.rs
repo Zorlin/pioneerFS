@@ -1,9 +1,12 @@
-use warp::Filter;
+use warp::{Filter, ws::Message, ws::WebSocket};
+use futures::{FutureExt, StreamExt};
+use std::sync::{Arc, Mutex};
+use tokio::sync::broadcast;
 use pioneerfs::network::Network;
 use serde_json::json;
 use std::sync::{Arc, Mutex};
 
-pub async fn start_webui(network: Arc<Mutex<Network>>) {
+pub async fn start_webui(network: Arc<Mutex<Network>>, tx: broadcast::Sender<String>) {
     let network_status = {
         let network = Arc::clone(&network);
         warp::path("status").map(move || {
@@ -36,9 +39,41 @@ pub async fn start_webui(network: Arc<Mutex<Network>>) {
         })
     };
 
-    warp::serve(network_status.or(index).or(run_tests))
+    let ws_route = warp::path("ws")
+        .and(warp::ws())
+        .and(with_broadcast(tx.clone()))
+        .map(|ws: warp::ws::Ws, tx| {
+            ws.on_upgrade(move |socket| handle_socket(socket, tx))
+        });
+
+    warp::serve(network_status.or(index).or(run_tests).or(ws_route))
         .run(([127, 0, 0, 1], 3030))
         .await;
+}
+
+fn with_broadcast(
+    tx: broadcast::Sender<String>,
+) -> impl Filter<Extract = (broadcast::Sender<String>,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || tx.clone())
+}
+
+async fn handle_socket(ws: WebSocket, tx: broadcast::Sender<String>) {
+    let (mut ws_tx, mut ws_rx) = ws.split();
+    let mut rx = tx.subscribe();
+
+    tokio::task::spawn(async move {
+        while let Ok(msg) = rx.recv().await {
+            if ws_tx.send(Message::text(msg)).await.is_err() {
+                break;
+            }
+        }
+    });
+
+    while let Some(result) = ws_rx.next().await {
+        if result.is_err() {
+            break;
+        }
+    }
 }
 
 const INDEX_HTML: &str = r#"
@@ -67,6 +102,12 @@ const INDEX_HTML: &str = r#"
     <button id="run-tests-button">Run Advanced Network Tests</button>
     <div id="test-result"></div>
     <script>
+        const ws = new WebSocket(`ws://${window.location.host}/ws`);
+        ws.onmessage = (event) => {
+            const message = event.data;
+            const resultDiv = document.getElementById("test-result");
+            resultDiv.innerText += message + "\n";
+        };
         document.getElementById("run-tests-button").addEventListener("click", () => {
             fetch("/run_tests")
                 .then(response => response.text())
