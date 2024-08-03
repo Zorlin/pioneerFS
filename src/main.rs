@@ -13,6 +13,7 @@ use ratatui::{
 };
 use std::{env, error::Error, io, time::{Duration, Instant}};
 use pioneerfs::{Network, DebugLevel};
+use std::sync::{Arc, Mutex};
 use tokio::task;
 
 mod webui;
